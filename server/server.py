@@ -5,11 +5,11 @@ import threading
 import logging
 from argparse import ArgumentParser
 try:
-    from common import MSG_FIELD_SEP, RSP_OK
+    from common import MSG_FIELD_SEP, RSP_OK, QUERY_NICK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
 except ImportError:
     top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     sys.path.append(top_path)
-    from common import MSG_FIELD_SEP, RSP_OK
+    from common import MSG_FIELD_SEP, RSP_OK, QUERY_SHIPS, QUERY_NICK, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
 
 TCP_RECIEVE_BUFFER_SIZE = 1024*1024
 MAX_PDU_SIZE = 200*1024*1024
@@ -66,11 +66,16 @@ class Server:
                 msg = msg.split(MSG_FIELD_SEP)
                 # PLace holder so Annika could test name registration while I program server/client comms and protocol
                 # Stupid code though...
-                if msg[1] == "Andre":
-                    client.send(MSG_FIELD_SEP.join([RSP_OK, "False"]))
-                else:
-                    client.send(MSG_FIELD_SEP.join([RSP_OK, "True"]))
-
+                if msg[0] == QUERY_NICK:
+                    if msg[1] == "Andre":
+                        client.send(RSP_NICK_EXISTS)
+                    else:
+                        client.send(RSP_OK)
+                elif msg[0] == QUERY_SHIPS:
+                    if len(msg[1]) < 10:
+                        client.send(RSP_SHIPS_PLACEMENT)
+                    else:
+                        client.send(RSP_OK)
 
             except socket.error as e:
                 LOG.error("Socket error: %s" % (str(e)))
