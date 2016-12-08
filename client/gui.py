@@ -1,46 +1,90 @@
 import Tkinter as tk
-
-def center(width, height):
-    x = (root.winfo_screenwidth() / 2) - (width / 2)
-    y = (root.winfo_screenheight() / 2) - (height / 2)
-    root.geometry('%dx%d+%d+%d' % (width, height, x, y))
-
-def callback():
-    print "clicked OK! " + str(v.get()) + ", nickname: " + str(nickname.get())
-
-root = tk.Tk()
-
-w = 800  # width for the Tk root
-h = 650  # height for the Tk root
-center(w, h)
-
-title = tk.Label(root, text="Game servers", font=("Helvetica", 16))
-title.pack(side=tk.TOP, fill=tk.X)
-
-label = tk.Label(root, text="Choose a server to connect to:", anchor=tk.W, font=("Helvetica", 12), padx=15, pady=10)
-label.pack(fill=tk.X)
-
-servers = ["yks", "kaks"]
-v = tk.IntVar()
-for val, server in enumerate(servers):
-    w = tk.Radiobutton(root, text=server, variable=v, value=val, anchor=tk.W,
-                       font=("Helvetica", 11), padx=10, pady=10)
-    if val == 0:
-        w.select()
-    w.pack(fill=tk.X)
+from client_comms import query_servers
 
 
-nickname_label = tk.Label(root, text="Choose your nickname:", anchor=tk.W, font=("Helvetica", 12), padx=15, pady=10)
-nickname = tk.Entry(root, width=30)
-nickname_label.pack(fill=tk.X)
-nickname.pack(anchor=tk.W, padx=15, pady=10)
-#entry.bind('<Return>', showentry) # if you press enter, the entered text is printed out
+class MainApplication(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+
+        # <create the rest of your GUI here>
+        self.center(800, 600)
+        self.v = tk.IntVar()
+        self.nickname = tk.Entry(self, width=30)
+
+        self.servers = query_servers()
+        self.choose_server()
+
+    def choose_server(self):
+        title = tk.Label(self, text="Game servers", font=("Helvetica", 16))
+        title.pack(side=tk.TOP, fill=tk.X)
+
+        label = tk.Label(self, text="Choose a server to connect to:", anchor=tk.W, font=("Helvetica", 12),
+                         padx=15, pady=10)
+        label.pack(fill=tk.X)
+
+        for val, server in enumerate(self.servers):
+            w = tk.Radiobutton(self, text=server, variable=self.v, value=val, anchor=tk.W,
+                               font=("Helvetica", 11), padx=10, pady=10)
+            if val == 0:
+                w.select()
+            w.pack(fill=tk.X)
+
+        # nickname_label = tk.Label(self, text="Choose your nickname:", anchor=tk.W, font=("Helvetica", 12),
+        #                           padx=15, pady=10)
+        # nickname_label.pack(fill=tk.X)
+        # self.nickname.pack(anchor=tk.W, padx=15, pady=10)
+        # # entry.bind('<Return>', showentry) # if you press enter, the entered text is printed out
+
+        okay = tk.Button(self, text="OK", command=self.callback_server, font=("Helvetica", 12), padx=15, pady=10)
+        okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
+        cancel = tk.Button(self, text="Cancel", command=self.destroy, font=("Helvetica", 12),
+                           padx=15, pady=10)
+        cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
+
+    def choose_nickname(self):
+        self.clear()
+
+        title = tk.Label(self, text="Game", font=("Helvetica", 16))
+        title.pack(side=tk.TOP, fill=tk.X)
+        nickname_label = tk.Label(self, text="Choose your nickname:", anchor=tk.W, font=("Helvetica", 12),
+                                  padx=15, pady=10)
+        nickname_label.pack(fill=tk.X)
+
+        self.nickname = tk.Entry(self, width=30)
+        self.nickname.pack(anchor=tk.W, padx=15, pady=10)
+
+        okay = tk.Button(self, text="OK", command=self.callback_nickname, font=("Helvetica", 12), padx=15, pady=10)
+        okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
+        cancel = tk.Button(self, text="Cancel", command=self.destroy, font=("Helvetica", 12),
+                           padx=15, pady=10)
+        cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
+
+    def center(self, width, height):
+        x = (self.winfo_screenwidth() / 2) - (width / 2)
+        y = (self.winfo_screenheight() / 2) - (height / 2)
+        self.geometry('%dx%d+%d+%d' % (width, height, x, y))
+
+    def clear(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+
+    def callback_server(self):
+        print self.servers[self.v.get()]
+        #TODO: siia if-else'id, kui serveriga ei saa yhendust
+        self.choose_nickname()
+
+    def callback_nickname(self):
+        #TODO: siia if-else'id, kui selline nickname on juba olemas
+        print self.nickname.get()
+        #TODO: kui nickname'i kätte saab, siis uus window
 
 
-okay = tk.Button(root, text="OK", command=callback, font=("Helvetica", 12), padx=15, pady=10)
-okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
-cancel = tk.Button(root, text="Cancel", command=root.destroy, font=("Helvetica", 12), padx=15, pady=10)
-cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
 
-#entry.pack()
-root.mainloop()
+if __name__ == "__main__":
+    app = MainApplication()
+    app.mainloop()
+
+    #root = tk.Tk()
+    #MainApplication(root).pack(side="top", fill="both", expand=False)
+    #win = MainApplication(root)
+    #root.mainloop()
