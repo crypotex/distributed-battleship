@@ -1,9 +1,15 @@
+import os
+import sys
 import socket
 import threading
 import logging
 from argparse import ArgumentParser
-from common import MSG_FIELD_SEP, RSP_OK
-
+try:
+    from common import MSG_FIELD_SEP, RSP_OK
+except ImportError:
+    top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(top_path)
+    from common import MSG_FIELD_SEP, RSP_OK
 
 TCP_RECIEVE_BUFFER_SIZE = 1024*1024
 MAX_PDU_SIZE = 200*1024*1024

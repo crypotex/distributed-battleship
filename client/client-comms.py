@@ -1,6 +1,14 @@
+import os
+import sys
+
 import logging
 from socket import AF_INET, SOCK_STREAM, socket
-from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK
+try:
+    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK
+except ImportError:
+    top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(top_path)
+    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK
 
 DEFAULT_SERVER_INET_ADDR = '127.0.0.1'
 DEFAULT_SERVER_PORT = 49995
