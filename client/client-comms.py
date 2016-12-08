@@ -29,10 +29,6 @@ class Comm:
         self.sock.connect((self.server, self.port))
         LOG.info("Socket initialized.")
 
-    def query_servers(self):
-        # Just a placeholder for now ...
-        return ["127.0.0.1", "10.10.10.10"]
-
     def query_nick_available(self, nick):
         # Just a placeholder for now
         self.sock.send(MSG_FIELD_SEP.join([QUERY_NICK, nick]))
@@ -42,10 +38,16 @@ class Comm:
             return msg[1]
 
     def listen(self):
+        # Should remove this as quickly - just to keep the client from terminating
         self.sock.recv(1024)
 
     def something(self):
         pass
+
+
+def query_servers(self):
+    # Just a placeholder for now ...
+    return ["127.0.0.1", "10.10.10.10"]
 
 c = Comm(DEFAULT_SERVER_INET_ADDR, DEFAULT_SERVER_PORT)
 msg = c.query_nick_available("Andre")
