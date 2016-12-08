@@ -2,6 +2,7 @@ import socket
 import threading
 import logging
 from argparse import ArgumentParser
+from common import MSG_FIELD_SEP, RSP_OK
 
 
 TCP_RECIEVE_BUFFER_SIZE = 1024*1024
@@ -56,7 +57,14 @@ class Server:
         while True:
             try:
                 msg = client.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
-                client.send(msg)
+                msg = msg.split(MSG_FIELD_SEP)
+                # PLace holder so Annika could test name registration while I program server/client comms and protocol
+                # Stupid code though...
+                if msg[1] == "Andre":
+                    client.send(MSG_FIELD_SEP.join([RSP_OK, "False"]))
+                else:
+                    client.send(MSG_FIELD_SEP.join([RSP_OK, "True"]))
+
 
             except socket.error as e:
                 LOG.error("Socket error: %s" % (str(e)))
