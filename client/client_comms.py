@@ -4,12 +4,13 @@ import sys
 import logging
 from socket import AF_INET, SOCK_STREAM, socket
 try:
-    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
+    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS, \
+        QUERY_GAMES, QUERY_JOIN_GAME, QUERY_NEW_GAME, QUERY_SERVERS
 except ImportError:
     top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     sys.path.append(top_path)
-    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
-
+    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS, \
+        QUERY_GAMES, QUERY_JOIN_GAME, QUERY_NEW_GAME, QUERY_SERVERS
 import json
 """
 Responsible for client side communication between user and server
@@ -65,14 +66,42 @@ class Comm:
             print("Response not ok!")
             return False
 
-    def create_game(self):
-        return "Not implemented"
+    # Is expected that server thread already knows who it is talking to, so no need for a nick, if not
+    # Then these methods need to have a nick with them
+    def create_game(self, game):
+        msg = MSG_FIELD_SEP.join([QUERY_NEW_GAME, game])
+        self.sock.send(msg)
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
+        if msg[0] == RSP_OK:
+            return True
+        else:
+            print("Response not ok!")
+            return False
 
-    def join_game(self):
-        return "Not implemented"
+    def join_game(self, chosen_game_id):
+        msg = MSG_FIELD_SEP.join([QUERY_JOIN_GAME, chosen_game_id])
+        self.sock.send(msg)
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
+        # Expects to receive list of games as a second part of msg
+        if msg[0] == RSP_OK:
+            # Probably needs a game as a second part of message
+            return msg[1]
+            # If not then:
+            # return True
+        else:
+            print("Response not ok!")
+            return False
 
     def query_games(self):
-        return "Not implemented"
+        msg = MSG_FIELD_SEP.join([QUERY_GAMES])
+        self.sock.send(msg)
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
+        # Expects to receive list of games/gameID-s as a second part of msg
+        if msg[0] == RSP_OK:
+            return msg[1]
+        else:
+            print("Response not ok!")
+            return False
 
     def listen(self):
         # Should remove this as quickly - just to keep the client from terminating
