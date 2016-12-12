@@ -4,12 +4,17 @@ import socket
 import threading
 import logging
 from argparse import ArgumentParser
+from session import Session
+from client_class import Client
+
 try:
     from common import MSG_FIELD_SEP, RSP_OK, QUERY_NICK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
 except ImportError:
     top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     sys.path.append(top_path)
     from common import MSG_FIELD_SEP, RSP_OK, QUERY_SHIPS, QUERY_NICK, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
+
+
 
 TCP_RECIEVE_BUFFER_SIZE = 1024*1024
 MAX_PDU_SIZE = 200*1024*1024
@@ -28,7 +33,7 @@ class Server:
     def __init__(self, addr, port):
         LOG.info("Server Started.")
         self.socket = self.__socket_init(addr, port)
-        self.clients = {}
+        self.session = Session()
         self.main_threader()
 
     @staticmethod
@@ -49,9 +54,14 @@ class Server:
             try:
                 client, address = self.socket.accept()
                 client.settimeout(7200)
+
+                t_name = "%s-%s" % (address[0], address[1])
+                self.session.clients[t_name] = Client(ip=address[0], port=address[1], socket=client, nick=t_name)
+                LOG.info("New client connected, adding to current session %s." % t_name)
+                print(self.session.clients)
+
                 threading.Thread(target=self.run_client_thread, args=(client, address)).start()
-                self.clients[address] = client
-                LOG.info("Current Clients: %s" % str(self.clients))
+
             except KeyboardInterrupt:
                 LOG.exception('Ctrl+C - terminating server')
                 break

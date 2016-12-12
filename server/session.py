@@ -1,6 +1,8 @@
 import os
 import sys
 
+from gameprotocol import GameProtocol
+
 try:
     from common import MSG_FIELD_SEP, RSP_OK, QUERY_NICK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
 except ImportError:
@@ -21,6 +23,7 @@ class Session:
             self.clients[client.nick] = client
             return True
 
-    def new_game(self, master):
-        game =
-
+    def new_game(self, size, master):
+        game = GameProtocol(size=size, master=master)
+        self.games.append(game)
+        return True

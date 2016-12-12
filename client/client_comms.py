@@ -70,7 +70,7 @@ def query_servers():
     # Just a placeholder for now ...
     return ["127.0.0.1", "10.10.10.10"]
 
-"""
+
 # for testing
 c = Comm(DEFAULT_SERVER_INET_ADDR, DEFAULT_SERVER_PORT)
 msg = c.query_nick_available("Andre")
@@ -81,4 +81,4 @@ shipss = {'Carrier': (0, 0, True), 'Battleship': (0, 1, False),
 msg = c.query_ships(shipss)
 print(msg)
 c.listen()
-"""
+
