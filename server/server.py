@@ -56,47 +56,53 @@ class Server:
                 client.settimeout(7200)
 
                 t_name = "%s-%s" % (address[0], address[1])
-                self.session.clients[t_name] = Client(ip=address[0], port=address[1], socket=client, nick=t_name)
+                t_client = Client(ip=address[0], port=address[1], socket=client, nick=t_name)
+
                 LOG.info("New client connected, adding to current session %s." % t_name)
                 print(self.session.clients)
 
-                threading.Thread(target=self.run_client_thread, args=(client, address)).start()
+                threading.Thread(target=self.run_client_thread, args=(t_client, )).start()
 
             except KeyboardInterrupt:
                 LOG.exception('Ctrl+C - terminating server')
                 break
         self.socket.close()
 
-    def run_client_thread(self, client, address):
-        LOG.info("New thread initialized with :%s and %s" % (str(client), address))
+    def run_client_thread(self, client):
+        LOG.info("New thread initialized with :%s." % (str(client)))
 
         while True:
             try:
-                msg = client.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
+                msg = client.socket.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
                 msg = msg.split(MSG_FIELD_SEP)
                 # PLace holder so Annika could test name registration while I program server/client comms and protocol
                 # Stupid code though...
                 if msg[0] == QUERY_NICK:
-                    if msg[1] == "Andre":
-                        client.send(RSP_NICK_EXISTS)
+                    client.update_nick(msg[1])
+                    resp = self.session.new_client(client)
+                    if not resp:
+                        client.socket.send(RSP_NICK_EXISTS)
                     else:
-                        client.send(RSP_OK)
-                elif msg[0] == QUERY_SHIPS:
-                    if len(msg[1]) < 10:
-                        client.send(RSP_SHIPS_PLACEMENT)
-                    else:
-                        client.send(RSP_OK)
+                        client.socket.send(RSP_OK)
+                    LOG.info("Nick chosen. It is: %s." % client)
+                    LOG.info("Nicks are: %s." % self.session.clients)
+                else:
+                    if msg[0] == QUERY_SHIPS:
+                        if len(msg[1]) < 10:
+                            client.socket.send(RSP_SHIPS_PLACEMENT)
+                        else:
+                            client.socket.send(RSP_OK)
 
             except socket.error as e:
                 LOG.error("Socket error: %s" % (str(e)))
                 break
-        if client is not None:
+        if client.socket is not None:
             try:
-                client.close()
+                client.socket.close()
             except socket.error:
-                LOG.info("Client %s disconnected." % address)
-        if address in self.clients:
-            del self.clients[address]
+                LOG.info("Client %s:%s disconnected." % (client.ip, client.port))
+        if client is not None:
+            del client
 
 
 if __name__ == "__main__":

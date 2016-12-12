@@ -7,3 +7,6 @@ class Client:
 
     def update_nick(self, new_nick):
         self.nick = new_nick
+
+    def __repr__(self):
+        return self.nick + " " + str(self.ip) + " " + str(self.port) + " " + str(self.socket)

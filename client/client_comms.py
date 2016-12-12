@@ -31,13 +31,14 @@ class Comm:
         self.sock.connect((self.server, self.port))
         LOG.info("Socket initialized.")
 
-    def query_nick_available(self, nick):
+    def query_nick(self, nick):
         # Just a placeholder for now
         self.sock.send(MSG_FIELD_SEP.join([QUERY_NICK, nick]))
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
-        print(msg)
         if msg[0] == RSP_OK:
-            return msg[1]
+            return True
+        else:
+            return False
 
     def query_ships(self, ships):
         """
@@ -73,10 +74,10 @@ def query_servers():
 
 # for testing
 c = Comm(DEFAULT_SERVER_INET_ADDR, DEFAULT_SERVER_PORT)
-msg = c.query_nick_available("Andre")
+msg = c.query_nick("Andre2")
 print(msg)
 shipss = {'Carrier': (0, 0, True), 'Battleship': (0, 1, False),
-          'Cruiser': (1, 1, True), 'Submarine': (1,2, True),
+          'Cruiser': (1, 1, True), 'Submarine': (1, 2, True),
           'Destroyer': (4, 3, True)}
 msg = c.query_ships(shipss)
 print(msg)
