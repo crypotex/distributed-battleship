@@ -1,4 +1,8 @@
 import Tkinter as tk
+import tkMessageBox
+
+from client_comms import Comm
+from client_comms import DEFAULT_SERVER_PORT
 from client_comms import query_servers
 
 # http://stackoverflow.com/questions/4781184/tkinter-displaying-a-square-grid
@@ -76,7 +80,8 @@ class MainApplication(tk.Tk):
 
         title = tk.Label(self, text="Game", font=("Helvetica", 16))
         title.pack(side=tk.TOP, fill=tk.X)
-        nickname_label = tk.Label(self, text="Choose your nickname:", anchor=tk.W, font=("Helvetica", 12),
+        nickname_label = tk.Label(self, text="Choose your nickname. It should be 4-28 characters long:",
+                                  anchor=tk.W, font=("Helvetica", 12),
                                   padx=15, pady=10)
         nickname_label.pack(fill=tk.X)
 
@@ -99,7 +104,7 @@ class MainApplication(tk.Tk):
                          padx=15, pady=10)
         label.pack(fill=tk.X)
 
-        # games = query_games()
+        # games = self.c.query_games()
         games = ["First game", "Second game"]
         for val, game in enumerate(games):
             w = tk.Radiobutton(self, text=game, variable=self.v2, value=val, anchor=tk.W,
@@ -168,19 +173,26 @@ class MainApplication(tk.Tk):
             widget.destroy()
 
     def callback_server(self):
-        print self.servers[self.v.get()]
+        host = self.servers[self.v.get()]
+        self.c = Comm(host, DEFAULT_SERVER_PORT)  # for time being
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
     def callback_nickname(self):
-        # TODO: siia if-else'id, kui selline nickname on juba olemas
-        print self.nickname.get()
-        # TODO: kui nickname'i k2tte saab, siis uus window, kus saab m2ngu valida
-        self.choose_game()
+        nickname = self.nickname.get()
+        free = self.c.query_nick(nickname)
+
+        if not nickname:
+            tkMessageBox.showinfo("Warning", "Please choose a nickname to proceed!")
+        elif not free:
+            tkMessageBox.showinfo("Warning", "Please choose another nickname to proceed!")
+        else:
+            self.choose_game()
 
     def callback_game(self, games, b):
         if b <= len(games) - 1:
             print "gameeee " + str(games[b])
+            self.c.join_game(games[b])
             # TODO: v6ib kohe serverisse saata, millise m2nguga liituda soovib
             self.show_grid(10)
             # TODO: siin peab serverist saama gridi suuruse
@@ -204,19 +216,22 @@ class MainApplication(tk.Tk):
             self.wait_window(choose_grid)
 
     def ok(self, grid_choose, e):
-
         print "value is", e.get()
         value = e.get()
 
-        grid_choose.destroy()
-        self.show_grid(value)
+        if value and value.isdigit():
+            grid_choose.destroy()
+            self.show_grid(value)
+        else:
+            tkMessageBox.showinfo("Warning", "You should enter a valid grid size.")
+            grid_choose.lift()
 
 
 if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
 
-    # root = tk.Tk()
-    # MainApplication(root).pack(side="top", fill="both", expand=False)
-    # win = MainApplication(root)
-    # root.mainloop()
+# root = tk.Tk()
+# MainApplication(root).pack(side="top", fill="both", expand=False)
+# win = MainApplication(root)
+# root.mainloop()
