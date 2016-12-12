@@ -75,7 +75,7 @@ def query_servers():
 c = Comm(DEFAULT_SERVER_INET_ADDR, DEFAULT_SERVER_PORT)
 msg = c.query_nick_available("Andre")
 print(msg)
-shipss = {'carrier': (0, 0, True), 'Battleship': (0, 1, False),
+shipss = {'Carrier': (0, 0, True), 'Battleship': (0, 1, False),
           'Cruiser': (1, 1, True), 'Submarine': (1,2, True),
           'Destroyer': (4, 3, True)}
 msg = c.query_ships(shipss)
