@@ -25,12 +25,17 @@ RSP_NO_SUCH_CLIENT = '6'
 RSP_GAME_STARTED = '7'
 RSP_NO_SUCH_GAME = '8'
 
-RSP_NOT_IMPLEMENTED_YET = '100'
+RSP_NOT_IMPLEMENTED_YET = '667'
 
 ERR_MSGS = {RSP_OK: 'No Error',
             RSP_NICK_EXISTS: 'Such nickname already Exists',
             RSP_SHIPS_PLACEMENT: 'Ships cannot be placed in such way.',
             RSP_BAD_NICK: 'The chosen nickname is not suitable.',
-            RSP_GAME_FULL: 'The game is already full.', }
+            RSP_GAME_FULL: 'The game is already full.',
+            RSP_BAD_SIZE: "Size cannot go out of bounds from [5,15]",
+            RSP_NO_SUCH_CLIENT: "Server expects the clients nick to be in its client list",
+            RSP_GAME_STARTED: "The game that client wants to join, has already started",
+            RSP_NO_SUCH_GAME: "The game with such ID does not exist.",
+            RSP_NOT_IMPLEMENTED_YET: "Unimplemented functionality! Implement it!"}
 # Field separator for sending multiple values ---------------------------------
 MSG_FIELD_SEP = ':'
