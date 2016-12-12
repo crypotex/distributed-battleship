@@ -13,6 +13,7 @@ CTR_MSGS = {QUERY_NICK: "Get nick available",
 # Responses--------------------------------------------------------------------
 RSP_OK = '0'
 RSP_NICK_EXISTS = '1'
+RSP_BAD_NICK = '3'
 RSP_SHIPS_PLACEMENT = '2'
 
 ERR_MSGS = {RSP_OK: 'No Error',
