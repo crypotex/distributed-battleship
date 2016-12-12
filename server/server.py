@@ -75,23 +75,9 @@ class Server:
             try:
                 msg = client.socket.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
                 msg = msg.split(MSG_FIELD_SEP)
-                # PLace holder so Annika could test name registration while I program server/client comms and protocol
-                # Stupid code though...
-                if msg[0] == QUERY_NICK:
-                    client.update_nick(msg[1])
-                    resp = self.session.new_client(client)
-                    if not resp:
-                        client.socket.send(RSP_NICK_EXISTS)
-                    else:
-                        client.socket.send(RSP_OK)
-                    LOG.info("Nick chosen. It is: %s." % client)
-                    LOG.info("Nicks are: %s." % self.session.clients)
-                else:
-                    if msg[0] == QUERY_SHIPS:
-                        if len(msg[1]) < 10:
-                            client.socket.send(RSP_SHIPS_PLACEMENT)
-                        else:
-                            client.socket.send(RSP_OK)
+                resp = self.session.handle_request(msg, client)
+                client.socket.send(resp)
+                LOG.info("Got request with message: %s, response is: %s." % (msg, resp))
 
             except socket.error as e:
                 LOG.error("Socket error: %s" % (str(e)))

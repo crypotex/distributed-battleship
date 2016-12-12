@@ -1,23 +1,25 @@
 import json
+__author__ = "Andre"
 
 
 class GameProtocol:
     identifier = {"Carrier": (1, 5), "Battleship": (2, 4), "Cruiser": (3, 3), "Submarine": (4, 3), "Destroyer": (5, 2)}
 
-    def __init__(self, size, master):
+    def __init__(self, game_id, size, master):
         # Master is a client nick
+        self.game_id = game_id
         self.size = size
         self.table = {}
         self.master = master
         self.table[master] = [[0 for _ in range(size)] for i in range(size)]
-        self.game_started = True
+        self.game_started = False
 
     def user_join_game(self, client):
         if client in self.table:
             return False
         else:
             self.table[client] = [[0 for _ in range(self.size)] for i in range(self.size)]
-            return self.table
+            return True
 
     def place_ships(self, ships):
         enc_ships = json.loads(ships)
@@ -52,3 +54,6 @@ class GameProtocol:
                     return False
                 self.table[x][i] = identifier
         return True
+
+    def start_game(self):
+        pass
