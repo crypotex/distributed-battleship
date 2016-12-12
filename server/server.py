@@ -74,7 +74,6 @@ class Server:
         while True:
             try:
                 msg = client.socket.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
-                msg = msg.split(MSG_FIELD_SEP)
                 resp = self.session.handle_request(msg, client)
                 client.socket.send(resp)
                 LOG.info("Got request with message: %s, response is: %s." % (msg, resp))

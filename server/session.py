@@ -79,5 +79,4 @@ class Session:
 
         else:
             print("No mans land")
-            if req == cm.QUERY_SHIPS:
-                pass
+            return cm.RSP_NOT_IMPLEMENTED_YET

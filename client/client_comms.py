@@ -4,19 +4,18 @@ import sys
 import logging
 from socket import AF_INET, SOCK_STREAM, socket
 try:
-    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS, \
-        QUERY_GAMES, QUERY_JOIN_GAME, QUERY_NEW_GAME, QUERY_SERVERS, RSP_BAD_NICK, RSP_GAME_FULL, RSP_GAME_GONE, \
-        ERR_MSGS, CTR_MSGS
+    import common as cm
 except ImportError:
     top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     sys.path.append(top_path)
-    from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS, \
-        QUERY_GAMES, QUERY_JOIN_GAME, QUERY_NEW_GAME, QUERY_SERVERS, RSP_BAD_NICK, RSP_GAME_FULL, RSP_GAME_GONE, \
-        ERR_MSGS, CTR_MSGS
+    import common as cm
 import json
 """
 Responsible for client side communication between user and server
 Should make it use RPC and Rabbit
+Changelog:
+Andre - reworked updates, so everything will be called from common, like cm.RSP_OK (Easier to update code, if changes
+        in common happen or something changed)
 
 Authors: Andre & Sander
 """
@@ -42,14 +41,14 @@ class Comm:
 
     def query_nick(self, nick):
         # Just a placeholder for now
-        self.sock.send(MSG_FIELD_SEP.join([QUERY_NICK, nick]))
-        LOG.info(CTR_MSGS[QUERY_NICK])
-        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
-        if msg[0] == RSP_OK:
+        self.sock.send(cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick]))
+        LOG.info(cm.CTR_MSGS[cm.QUERY_NICK])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+        if msg[0] == cm.RSP_OK:
             LOG.info("Nickname created.")
             return True
         else:
-            LOG.error(ERR_MSGS[msg[0]])
+            LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
     def query_ships(self, ships):
@@ -62,59 +61,59 @@ class Comm:
         :return: boolean, true if all ships placed correctly (no overlap), else false
         """
         ship_dump = json.dumps(ships, encoding='utf-8')
-        msg = MSG_FIELD_SEP.join([QUERY_SHIPS, ship_dump])
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHIPS, ship_dump])
         self.sock.send(msg)
-        LOG.info(CTR_MSGS[QUERY_SHIPS])
-        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
-        if msg[0] == RSP_OK:
+        LOG.info(cm.CTR_MSGS[cm.QUERY_SHIPS])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+        if msg[0] == cm.RSP_OK:
             LOG.info("Ships queried successfully.")
             return True
         else:
-            LOG.error(ERR_MSGS[msg[0]])
+            LOG.error(cm.ERR_MSGS[msg[0]])
             print("Response not ok!")
             return False
 
     # Is expected that server thread already knows who it is talking to, so no need for a nick, if not
     # Then these methods need to have a nick with them
     def create_game(self, game):
-        msg = MSG_FIELD_SEP.join([QUERY_NEW_GAME, game])
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_NEW_GAME, game])
         self.sock.send(msg)
-        LOG.info(CTR_MSGS[QUERY_NEW_GAME])
-        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
-        if msg[0] == RSP_OK:
+        LOG.info(cm.CTR_MSGS[cm.QUERY_NEW_GAME])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+        if msg[0] == cm.RSP_OK:
             LOG.info("Game created successfully.")
             return True
         else:
-            LOG.error(ERR_MSGS[msg[0]])
+            LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
     def join_game(self, chosen_game_id):
-        msg = MSG_FIELD_SEP.join([QUERY_JOIN_GAME, chosen_game_id])
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_JOIN_GAME, chosen_game_id])
         self.sock.send(msg)
-        LOG.info(CTR_MSGS[QUERY_JOIN_GAME])
-        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
+        LOG.info(cm.CTR_MSGS[cm.QUERY_JOIN_GAME])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
         # Expects to receive list of games as a second part of msg
-        if msg[0] == RSP_OK:
+        if msg[0] == cm.RSP_OK:
             LOG.info("Game joined successfully.")
             # Probably needs a game as a second part of message
             return msg[1]
             # If not then:
             # return True
         else:
-            LOG.error(ERR_MSGS[msg[0]])
+            LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
     def query_games(self):
-        msg = MSG_FIELD_SEP.join([QUERY_GAMES])
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_GAMES])
         self.sock.send(msg)
-        LOG.info(CTR_MSGS[QUERY_GAMES])
-        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(MSG_FIELD_SEP)
+        LOG.info(cm.CTR_MSGS[cm.QUERY_GAMES])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
         # Expects to receive list of games/gameID-s as a second part of msg
-        if msg[0] == RSP_OK:
+        if msg[0] == cm.RSP_OK:
             LOG.info("Received list of games available for joining.")
             return msg[1]
         else:
-            LOG.error(ERR_MSGS[msg[0]])
+            LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
     def listen(self):
@@ -129,7 +128,7 @@ def query_servers():
     # Just a placeholder for now ...
     return ["127.0.0.1", "10.10.10.10"]
 
-"""
+
 # for testing
 c = Comm(DEFAULT_SERVER_INET_ADDR, DEFAULT_SERVER_PORT)
 msg = c.query_nick("Andre2")
@@ -140,4 +139,3 @@ shipss = {'Carrier': (0, 0, True), 'Battleship': (0, 1, False),
 msg = c.query_ships(shipss)
 print(msg)
 c.listen()
-"""
