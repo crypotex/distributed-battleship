@@ -41,6 +41,9 @@ class Comm:
 
     def query_nick(self, nick):
         # Just a placeholder for now
+        if ':' in nick:
+            LOG.error('":" not allowed in nickname.')
+            return False
         self.sock.send(cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick]))
         LOG.info(cm.CTR_MSGS[cm.QUERY_NICK])
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
