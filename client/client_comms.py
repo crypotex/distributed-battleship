@@ -11,6 +11,12 @@ except ImportError:
     from common import MSG_FIELD_SEP, QUERY_NICK, RSP_OK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
 
 import json
+"""
+Responsible for client side communication between user and server
+Should make it use RPC and Rabbit
+
+Authors: Andre & Sander
+"""
 
 DEFAULT_SERVER_INET_ADDR = '127.0.0.1'
 DEFAULT_SERVER_PORT = 49995
@@ -58,6 +64,15 @@ class Comm:
         else:
             print("Response not ok!")
             return False
+
+    def create_game(self):
+        return "Not implemented"
+
+    def join_game(self):
+        return "Not implemented"
+
+    def query_games(self):
+        return "Not implemented"
 
     def listen(self):
         # Should remove this as quickly - just to keep the client from terminating
