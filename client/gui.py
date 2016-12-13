@@ -168,6 +168,18 @@ class MainApplication(tk.Tk):
         start_button = tk.Button(self, text="Start game", padx=10, pady=20, command=lambda: self.start_game(start_button))
         start_button.grid(row=6, columnspan=2)
 
+        print self.ships.items()
+        for ship, value in self.ships.items():
+            print ship, value
+            ship_size = self.game.identifier.get(ship)[1]
+            if value[2]:
+                for i in range(ship_size):
+                    self.my_grid.itemconfig(self.my_grid.rect[value[i], value[1]], fill="blue")
+            else:
+                for i in range(ship_size):
+                    self.my_grid.itemconfig(self.my_grid.rect[value[0], value[i]], fill="blue")
+
+
         # print self.opp2_grid.itemconfig(self.opp2_grid.rect[0, 5], fill="white")
 
     def start_game(self, start_button):
@@ -245,15 +257,17 @@ class MainApplication(tk.Tk):
             e.pack(padx=5, pady=5)
             e.focus()
 
-            b = tk.Button(choose_grid, text="OK", command=lambda: self.ok(choose_grid, e))
+            b = tk.Button(choose_grid, text="OK", command=lambda: self.ok(None, choose_grid, e))
             b.pack(pady=5, padx=5)
+
+            choose_grid.bind("<Return>", lambda event: self.ok(event, choose_grid, e))
 
             self.wait_window(choose_grid)
 
     def init_board(self, gid):
         self.game = gp.GameProtocol(game_id=gid, size=self.size, client_nick=self.nickname)
 
-    def ok(self, grid_choose, e):
+    def ok(self, event, grid_choose, e):
         self.size = e.get()
 
         # self.show_grids()
@@ -284,9 +298,8 @@ class MainApplication(tk.Tk):
         direction_label.grid(row=0, column=2)
 
         choices = ['Horizontal', 'Vertical']
-        ships = {'Carrier': 5, 'Battleship': 4, 'Cruiser': 3, 'Submarine': 3, 'Destroyer': 3}
+        ships = {'Carrier': 5, 'Battleship': 4, 'Cruiser': 3, 'Submarine': 3, 'Destroyer': 2}
         i = 1
-        print self.size
         for ship, value in sorted(ships.items(), key=operator.itemgetter(1), reverse=True):
             text = ship + " - size " + str(value)
             label = tk.Label(w, text=text, font=("Helvetica", 12), padx=10, pady=10)
@@ -317,16 +330,21 @@ class MainApplication(tk.Tk):
     def send_ships(self, event):
         msg = {}
         for ship, value in self.ships.items():
-            msg[ship] = (str(value[0].get()).upper(), str(value[1].get()))
-
-        print msg
+            print ship, value[0].get(), value[1].get()
+            if value[0].get() != "":
+                msg[ship] = (str(value[0].get()).upper(), str(value[1].get()))
+            else:
+                tkMessageBox.showwarning("Warning", "Please enter all coordinates.")
+                return
         process_ships = self.game.place_ships(msg)
-        print process_ships
         resp = self.c.query_place_ships(self.game.game_id, process_ships)
         if resp:
+            self.ships = {}
+            self.ships = process_ships
+
             self.show_grids()
         else:
-            tkMessageBox.showwarning("Something went wrong.")
+            tkMessageBox.showwarning("Warning", "Something went wrong.")
 
 
 
