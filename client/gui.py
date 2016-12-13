@@ -303,7 +303,7 @@ class MainApplication(tk.Tk):
 
         print msg
         self.game.place_ships(msg)
-        resp = self.c.query_place_ships(msg)
+        resp = self.c.query_place_ships(self.game.game_id, msg)
         if resp:
             self.show_grids()
         else:
