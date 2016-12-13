@@ -85,9 +85,10 @@ class Session:
                 return cm.RSP_SHIPS_PLACEMENT
 
         elif req == cm.START_GAME:
-            resp = self.games[extra[0]].start_game()
+            resp = self.games[extra[0]].start_game(client)
             if resp:
-                return cm.RSP_OK
+                print(resp)
+                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, resp])
             else:
                 return cm.RSP_SHIPS_NOT_PLACED
 

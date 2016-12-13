@@ -6,8 +6,7 @@ QUERY_PLACE_SHIPS = '3'
 QUERY_GAMES = '4'
 QUERY_NEW_GAME = '5'
 QUERY_JOIN_GAME = '6'
-QUERY_OTHER_SHIPS = '7'
-START_GAME = '8'
+START_GAME = '7'
 
 
 CTR_MSGS = {QUERY_NICK: "Get nick available",
@@ -16,8 +15,7 @@ CTR_MSGS = {QUERY_NICK: "Get nick available",
             QUERY_GAMES: "Get games available for joining",
             QUERY_NEW_GAME: "Create a new game",
             QUERY_JOIN_GAME: "Join an existing game",
-            QUERY_OTHER_SHIPS: "Get other players ships.",
-            START_GAME: "Starts the current game.", }
+            START_GAME: "Starts the current game and additionally sends all ships", }
 # Responses--------------------------------------------------------------------
 RSP_OK = '0'
 RSP_NICK_EXISTS = '1'
