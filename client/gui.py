@@ -17,7 +17,7 @@ Y_OFFSET = 10
 class Grid(tk.Canvas):
     def __init__(self, master, size, mine=False):
         tk.Canvas.__init__(self, master)
-        self.grid_size = int(size) * 30 + 10  # vv6ib veel muuta, et paremini oleks jaotatud
+        self.grid_size = int(size) * 26 + 5  # vv6ib veel muuta, et paremini oleks jaotatud
         self.rows = int(size)
         self.columns = int(size)
         self.cellheight = 25
@@ -116,7 +116,6 @@ class MainApplication(tk.Tk):
         label.pack(fill=tk.X)
 
         games = eval(self.c.query_games())
-        # games = ["First game", "Second game"]
 
         for val, game in enumerate(games):
             w = tk.Radiobutton(self, text=game, variable=self.v2, value=val, anchor=tk.W,
@@ -140,42 +139,63 @@ class MainApplication(tk.Tk):
     def show_grids(self):
         self.clear()
 
-        title = tk.Label(self, text="Your game name", font=("Helvetica", 16))
+        name = self.game.game_id
+        title = tk.Label(self, text=str(name), font=("Helvetica", 16))
         title.grid(row=0, columnspan=2)
 
         my_grid = tk.Label(self, text="My grid", font=("Helvetica", 12))
         my_grid.grid(row=1, column=0)
 
-        label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12))
+        label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12), pady=10)
         label.grid(row=1, column=1)
 
         for j in range(2):
-            label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12))
-            label.grid(row=3, column=j)
+            label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12), pady=10)
+            label.grid(row=4, column=j)
 
         self.my_grid = Grid(self, self.size, mine=True)
         self.my_grid.grid(row=2, column=0)
-
-        self.my_grid.bind("<1>", self.on_object_click)
 
         self.opp1_grid = Grid(self, self.size)
         self.opp1_grid.grid(row=2, column=1)
 
         self.opp2_grid = Grid(self, self.size)
-        self.opp2_grid.grid(row=3, column=0)
-        self.opp3_grid = Grid(self, self.size)
-        self.opp3_grid.grid(row=3, column=1)
+        self.opp2_grid.grid(row=5, column=0)
 
-        self.center(650, 800)
+        self.opp3_grid = Grid(self, self.size)
+        self.opp3_grid.grid(row=5, column=1)
+
+        start_button = tk.Button(self, text="Start game", padx=10, pady=20, command=lambda: self.start_game(start_button))
+        start_button.grid(row=6, columnspan=2)
+
         # print self.opp2_grid.itemconfig(self.opp2_grid.rect[0, 5], fill="white")
 
-    def on_object_click(self, event):
-        print('Got object click', event.x, event.y)
-        print(event.widget.find_closest(event.x, event.y))
+    def start_game(self, start_button):
+        start_button.destroy()
 
-        for key, value in self.my_grid.rect.iteritems():
-            if event.widget.find_closest(event.x, event.y)[0] == value:
-                print key, value
+        w1 = tk.Frame(self)
+        shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
+        self.opp1_shoot = tk.Entry(w1, width=10)
+        shoot_opp1_label.grid(row=0, column=0)
+        self.opp1_shoot.grid(row=0, column=1)
+        w1.grid(row=3, column=1)
+
+        w2 = tk.Frame(self)
+        shoot_opp2_label = tk.Label(w2, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
+        self.opp2_shoot = tk.Entry(w2, width=10)
+        shoot_opp2_label.grid(row=0, column=0)
+        self.opp2_shoot.grid(row=0, column=1)
+        w2.grid(row=7, column=0)
+
+        w3 = tk.Frame(self)
+        shoot_opp3_label = tk.Label(w3, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
+        self.opp3_shoot = tk.Entry(w3, width=10)
+        shoot_opp3_label.grid(row=0, column=0)
+        self.opp3_shoot.grid(row=0, column=1)
+        w3.grid(row=7, column=1)
+
+        # TODO: siin kutsuda v2lja meetod GameProtocolist
+        # TODO: vaja kontrollida, mitu vastast on ja siis vastavalt vajadusele m6ned entry'id disable'ida
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -205,14 +225,14 @@ class MainApplication(tk.Tk):
 
     def callback_game(self, event, games, b):
         if b <= len(games) - 1:
-            print "gameeee " + str(games[b])
-            self.c.join_game(games[b])
-            self.size = 10
-            self.init_board(games[b])
-            self.choose_ships()
-            # TODO: siin peab serverist saama gridi suuruse
+            resp = self.c.join_game(games[b])
+            if resp != False:
+                self.size = int(resp)
+                self.init_board(games[b])
+                self.choose_ships()
+            else:
+                tkMessageBox.showwarning("Didn't get grid size from server.")
         else:
-            print "gameeee New Game"
             choose_grid = tk.Toplevel(self)
             choose_grid.title("Choose the grid size")
             w = self.winfo_screenwidth()
@@ -257,10 +277,8 @@ class MainApplication(tk.Tk):
         tk.Label(self, text="Place your ships", font=("Helvetica", 16)).grid(row=0, columnspan=2)
         self.my_grid.grid(row=1, column=0)
 
-        # self.my_grid.bind("<1>", self.on_object_click)
-
         w = tk.Frame(self)
-        start_point_label = tk.Label(w, text="Starting point (A,1):")
+        start_point_label = tk.Label(w, text="Starting point (A,0):")
         start_point_label.grid(row=0, column=1)
         direction_label = tk.Label(w, text="Direction:")
         direction_label.grid(row=0, column=2)
