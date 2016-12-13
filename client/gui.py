@@ -3,6 +3,7 @@ import tkMessageBox
 
 from client_comms import Comm
 from client_comms import DEFAULT_SERVER_PORT
+import operator
 from client_comms import query_servers
 
 # http://stackoverflow.com/questions/4781184/tkinter-displaying-a-square-grid
@@ -25,6 +26,7 @@ class Grid(tk.Canvas):
         self.make_grid()
 
     def make_grid(self):
+        #TODO: lisada, et n2itaks numbreid ja t2hti
         for column in range(self.columns):
             for row in range(self.rows):
                 x1 = column * self.cellwidth + X_OFFSET
@@ -123,7 +125,7 @@ class MainApplication(tk.Tk):
                            padx=15, pady=10)
         cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
 
-    def show_grid(self, size):
+    def show_grids(self):
         self.clear()
 
         title = tk.Label(self, text="Your game name", font=("Helvetica", 16))
@@ -139,17 +141,17 @@ class MainApplication(tk.Tk):
             label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12))
             label.grid(row=3, column=j)
 
-        self.my_grid = Grid(self, size, mine=True)
+        self.my_grid = Grid(self, self.size, mine=True)
         self.my_grid.grid(row=2, column=0)
 
         self.my_grid.bind("<1>", self.on_object_click)
 
-        self.opp1_grid = Grid(self, size)
+        self.opp1_grid = Grid(self, self.size)
         self.opp1_grid.grid(row=2, column=1)
 
-        self.opp2_grid = Grid(self, size)
+        self.opp2_grid = Grid(self, self.size)
         self.opp2_grid.grid(row=3, column=0)
-        self.opp3_grid = Grid(self, size)
+        self.opp3_grid = Grid(self, self.size)
         self.opp3_grid.grid(row=3, column=1)
 
         self.center(650, 800)
@@ -194,7 +196,8 @@ class MainApplication(tk.Tk):
             print "gameeee " + str(games[b])
             self.c.join_game(games[b])
             # TODO: v6ib kohe serverisse saata, millise m2nguga liituda soovib
-            self.show_grid(10)
+            self.size = 10
+            self.choose_ships()
             # TODO: siin peab serverist saama gridi suuruse
         else:
             print "gameeee New Game"
@@ -217,8 +220,32 @@ class MainApplication(tk.Tk):
 
     def ok(self, grid_choose, e):
         print "value is", e.get()
-        value = e.get()
+        self.size = e.get()
 
+        grid_choose.destroy()
+        self.choose_ships()
+
+    def choose_ships(self):
+        self.clear()
+        self.my_grid = Grid(self, self.size)
+        tk.Label(self, text="Place your ships", font=("Helvetica", 16)).grid(row=0, columnspan=2)
+        self.my_grid.grid(row=1, column=0)
+
+        self.my_grid.bind("<1>", self.on_object_click)
+
+        w = tk.Frame(self)
+        ships = {'Carrier': 5, 'Battleship': 4, 'Cruiser': 3, 'Submarine': 3, 'Destroyer': 3}
+        i = 0
+        for ship, value in sorted(ships.items(), key=operator.itemgetter(1), reverse=True):
+            text = ship + " - size " + str(value)
+            label = tk.Label(w, text=text, font=("Helvetica", 12), padx=10, pady=10)
+            label.grid(row=i, column=0)
+            i += 1
+
+        w.grid(row=1, column=1, sticky="N")
+
+
+       # self.show_grids()
         if value and value.isdigit():
             grid_choose.destroy()
             self.show_grid(value)
