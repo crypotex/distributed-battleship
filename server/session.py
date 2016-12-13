@@ -77,6 +77,21 @@ class Session:
             resp = self.join_game(game_id=extra[0], client=client.nick)
             return resp
 
+        elif req == cm.QUERY_PLACE_SHIPS:
+            resp = self.games[extra[0]].place_ships(extra[1])
+            if resp:
+                return cm.RSP_OK
+            else:
+                return cm.RSP_SHIPS_PLACEMENT
+
+        elif req == cm.START_GAME:
+            resp = self.games[extra[0]].start_game()
+            if resp:
+                return cm.RSP_OK
+            else:
+                return cm.RSP_SHIPS_NOT_PLACED
+
+
         else:
             print("No mans land")
             return cm.RSP_NOT_IMPLEMENTED_YET

@@ -12,6 +12,7 @@ class GameProtocol:
         self.table = {}
         self.master = master
         self.table[master] = [[0 for _ in range(size)] for i in range(size)]
+        self.alive_ships = {}
         self.game_started = False
 
     def user_join_game(self, client):
@@ -21,7 +22,7 @@ class GameProtocol:
             self.table[client] = [[0 for _ in range(self.size)] for i in range(self.size)]
             return True
 
-    def place_ships(self, ships):
+    def place_ships(self, client_nick, ships):
         enc_ships = json.loads(ships)
         if len(enc_ships) != 5:
             return False
@@ -30,34 +31,38 @@ class GameProtocol:
             return False
         else:
             for ship, params in enc_ships.items():
-                if not self._process_ship(params[0], params[1], params[2], ship):
+                if not self._process_ship(client_nick, params[0], params[1], params[2], ship):
                     print(ship)
                     return False
+            self.alive_ships[client_nick] = {i: True for i in ships.keys()}
 
             return self.table
 
-    def _process_ship(self, x, y, horizontal, ship):
+    def _process_ship(self, client_nick, x, y, horizontal, ship):
         # Direction on horisontaalne
         identifier, ship_length = self.identifier[ship]
         if horizontal:
             if x + ship_length > self.size:
                 return False
             for i in range(x, x + ship_length):
-                if self.table[i][y] != 0:
+                if self.table[client_nick][i][y] != 0:
                     return False
-                self.table[i][y] = identifier
+                self.table[client_nick][i][y] = identifier
         else:
             if y + ship_length > self.size:
                 return False
             for i in range(y, y + ship_length):
-                if self.table[x][i] != 0:
+                if self.table[client_nick][x][i] != 0:
                     return False
-                self.table[x][i] = identifier
+                self.table[client_nick][x][i] = identifier
         return True
 
     def start_game(self):
-        pass
+        if all([len(self.alive_ships[e]) == 5 for e in self.alive_ships]):
+            return True
+        else:
+            return False
 
-    def all_ships_placed(self):
+    def send_ships(self, client):
         pass
 

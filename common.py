@@ -7,6 +7,7 @@ QUERY_GAMES = '4'
 QUERY_NEW_GAME = '5'
 QUERY_JOIN_GAME = '6'
 QUERY_OTHER_SHIPS = '7'
+START_GAME = '8'
 
 
 CTR_MSGS = {QUERY_NICK: "Get nick available",
@@ -15,7 +16,8 @@ CTR_MSGS = {QUERY_NICK: "Get nick available",
             QUERY_GAMES: "Get games available for joining",
             QUERY_NEW_GAME: "Create a new game",
             QUERY_JOIN_GAME: "Join an existing game",
-            QUERY_OTHER_SHIPS: "Get other players ships.", }
+            QUERY_OTHER_SHIPS: "Get other players ships.",
+            START_GAME: "Starts the current game.", }
 # Responses--------------------------------------------------------------------
 RSP_OK = '0'
 RSP_NICK_EXISTS = '1'
@@ -26,6 +28,7 @@ RSP_BAD_SIZE = '5'
 RSP_NO_SUCH_CLIENT = '6'
 RSP_GAME_STARTED = '7'
 RSP_NO_SUCH_GAME = '8'
+RSP_SHIPS_NOT_PLACED = '9'
 
 RSP_NOT_IMPLEMENTED_YET = '667'
 
@@ -38,6 +41,8 @@ ERR_MSGS = {RSP_OK: 'No Error',
             RSP_NO_SUCH_CLIENT: "Server expects the clients nick to be in its client list",
             RSP_GAME_STARTED: "The game that client wants to join, has already started",
             RSP_NO_SUCH_GAME: "The game with such ID does not exist.",
+            RSP_SHIPS_NOT_PLACED: "Some players have not placed their ships yet.",
+
             RSP_NOT_IMPLEMENTED_YET: "Unimplemented functionality! Implement it!"}
 # Field separator for sending multiple values ---------------------------------
 MSG_FIELD_SEP = ':'
