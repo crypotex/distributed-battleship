@@ -7,6 +7,7 @@ QUERY_GAMES = '4'
 QUERY_NEW_GAME = '5'
 QUERY_JOIN_GAME = '6'
 START_GAME = '7'
+QUERY_SHOOT = '8'
 
 
 CTR_MSGS = {QUERY_NICK: "Get nick available",
@@ -15,7 +16,8 @@ CTR_MSGS = {QUERY_NICK: "Get nick available",
             QUERY_GAMES: "Get games available for joining",
             QUERY_NEW_GAME: "Create a new game",
             QUERY_JOIN_GAME: "Join an existing game",
-            START_GAME: "Starts the current game and additionally sends all ships", }
+            START_GAME: "Starts the current game and additionally sends all ships",
+            QUERY_SHOOT: "Sends shots made to all other players"}
 # Responses--------------------------------------------------------------------
 RSP_OK = '0'
 RSP_NICK_EXISTS = '1'
@@ -28,6 +30,7 @@ RSP_GAME_STARTED = '7'
 RSP_NO_SUCH_GAME = '8'
 RSP_SHIPS_NOT_PLACED = '9'
 RSP_NOT_MASTER = '10'
+RSP_INVALID_SHOT = '11'
 
 RSP_NOT_IMPLEMENTED_YET = '667'
 
@@ -42,7 +45,7 @@ ERR_MSGS = {RSP_OK: 'No Error',
             RSP_NO_SUCH_GAME: "The game with such ID does not exist.",
             RSP_SHIPS_NOT_PLACED: "Some players have not placed their ships yet or only 1 player connected.",
             RSP_NOT_MASTER: "Not master, so cannot create game and some other stuff maybe...",
-
+            RSP_INVALID_SHOT: "Shot placed on invalid square or square has already been shot.",
             RSP_NOT_IMPLEMENTED_YET: "Unimplemented functionality! Implement it!"}
 # Field separator for sending multiple values ---------------------------------
 MSG_FIELD_SEP = '$'
