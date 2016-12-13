@@ -302,8 +302,9 @@ class MainApplication(tk.Tk):
             msg[ship] = (str(value[0].get()).upper(), str(value[1].get()))
 
         print msg
-        self.game.place_ships(msg)
-        resp = self.c.query_place_ships(self.game.game_id, msg)
+        process_ships = self.game.place_ships(msg)
+        print process_ships
+        resp = self.c.query_place_ships(self.game.game_id, process_ships)
         if resp:
             self.show_grids()
         else:
