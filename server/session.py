@@ -33,10 +33,10 @@ class Session:
         elif master not in self.clients:
             return cm.RSP_NO_SUCH_CLIENT
         else:
-            gid = uuid.uuid4()
+            gid = str(uuid.uuid4())
             game = GameProtocol(game_id=gid, size=size, master=master)
             self.games[gid] = game
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, str(gid)])
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, gid])
 
     def join_game(self, game_id, client):
         if game_id in self.games:
