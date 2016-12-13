@@ -54,7 +54,7 @@ class Comm:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
-    def query_ships(self, ships):
+    def query_place_ships(self, ships):
         """
         Dictionary of Ships, where key is ship (Carrier, destroyer etc) and
         value is tuple of (int, int, bool), where first two are x and y for
@@ -64,12 +64,12 @@ class Comm:
         :return: boolean, true if all ships placed correctly (no overlap), else false
         """
         ship_dump = json.dumps(ships, encoding='utf-8')
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHIPS, ship_dump])
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_PLACE_SHIPS, ship_dump])
         self.sock.send(msg)
-        LOG.info(cm.CTR_MSGS[cm.QUERY_SHIPS])
+        LOG.info(cm.CTR_MSGS[cm.QUERY_PLACE_SHIPS])
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
         if msg[0] == cm.RSP_OK:
-            LOG.info("Ships queried successfully.")
+            LOG.info("Ships placed successfully.")
             return True
         else:
             LOG.error(cm.ERR_MSGS[msg[0]])
