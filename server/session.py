@@ -55,8 +55,8 @@ class Session:
             return cm.RSP_NO_SUCH_GAME
 
     def start_game(self, game_id, client):
-        if self.games[game_id].master == client.nick:
-            resp = self.games[game_id].start_game(client)
+        if self.games[game_id].master == client:
+            resp = self.games[game_id].start_game()
             if resp:
                 return cm.MSG_FIELD_SEP.join([cm.RSP_OK, resp])
             else:
@@ -96,7 +96,7 @@ class Session:
                 return cm.RSP_SHIPS_PLACEMENT
 
         elif req == cm.START_GAME:
-            resp = self.start_game(extra[0], client)
+            resp = self.start_game(game_id=extra[0], client=client.nick)
             return resp
 
 
