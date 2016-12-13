@@ -25,6 +25,9 @@ class GameProtocol:
 
     def place_ships(self, client_nick, ships):
         enc_ships = json.loads(ships, encoding='utf-8')
+        if type(enc_ships) is not dict:
+            print("Stop sending me non dictionaries ... I want dict, you send: %s." % % str(type(enc_ships)))
+            return False
         if len(enc_ships) != 5:
             print(enc_ships)
             return False
