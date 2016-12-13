@@ -129,7 +129,20 @@ class Comm:
         if msg[0] == cm.RSP_OK:
             LOG.info("Received game info that is being started.")
             # Assumes that all info about the game that is to be started will be in msg parts 1-...
-            return msg[1:]
+            return json.loads(msg[1], encoding='utf-8')
+        else:
+            LOG.error(cm.ERR_MSGS[msg[0]])
+            return False
+
+    def query_shoot(self, positions):
+        shooting_dump = json.dumps(positions, encoding='utf-8')
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHOOT, shooting_dump])
+        self.sock.send(msg)
+        LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+        if msg[0] == cm.RSP_OK:
+            LOG.info("Shot processed successfully.")
+            return True
         else:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
