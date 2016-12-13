@@ -1,4 +1,5 @@
 import Tkinter as tk
+import ttk
 import tkMessageBox
 
 from client_comms import Comm
@@ -51,6 +52,8 @@ class MainApplication(tk.Tk):
         self.v2 = tk.IntVar()
         self.nickname = tk.Entry(self, width=30)
 
+        self.ships = []
+
         self.servers = query_servers()
         self.choose_server()
 
@@ -71,11 +74,13 @@ class MainApplication(tk.Tk):
                 w.select()
             w.pack(fill=tk.X)
 
-        okay = tk.Button(self, text="OK", command=self.callback_server, font=("Helvetica", 12), padx=15, pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_server(None), font=("Helvetica", 12), padx=15, pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.destroy, font=("Helvetica", 12),
                            padx=15, pady=10)
         cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
+
+        self.bind("<Return>", self.callback_server)  # now you can get to the next stage using Enter
 
     def choose_nickname(self):
         self.clear()
@@ -91,11 +96,13 @@ class MainApplication(tk.Tk):
         self.nickname.pack(anchor=tk.W, padx=15, pady=10)
         self.nickname.focus()
 
-        okay = tk.Button(self, text="OK", command=self.callback_nickname, font=("Helvetica", 12), padx=15, pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None), font=("Helvetica", 12), padx=15, pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_server, font=("Helvetica", 12),
                            padx=15, pady=10)
         cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
+
+        self.bind("<Return>", self.callback_nickname)
 
     def choose_game(self):
         self.clear()
@@ -118,12 +125,14 @@ class MainApplication(tk.Tk):
         new_game = tk.Radiobutton(self, text="New game", variable=self.v2, value=(len(games)), anchor=tk.W,
                                   font=("Helvetica", 11), padx=10, pady=10)
         new_game.pack(fill=tk.X)
-        okay = tk.Button(self, text="OK", command=lambda: self.callback_game(games, self.v2.get()),
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_game(None, games, self.v2.get()),
                          font=("Helvetica", 12), padx=15, pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_server, font=("Helvetica", 12),
                            padx=15, pady=10)
         cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
+
+        self.bind("<Return>", lambda e: self.callback_game(e, games, self.v2.get()))
 
     def show_grids(self):
         self.clear()
@@ -174,24 +183,24 @@ class MainApplication(tk.Tk):
         for widget in self.winfo_children():
             widget.destroy()
 
-    def callback_server(self):
+    def callback_server(self, event):
         host = self.servers[self.v.get()]
         self.c = Comm(host, DEFAULT_SERVER_PORT)  # for time being
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
-    def callback_nickname(self):
+    def callback_nickname(self, event):
         nickname = self.nickname.get()
         free = self.c.query_nick(nickname)
 
         if not nickname:
-            tkMessageBox.showinfo("Warning", "Please choose a nickname to proceed!")
+            tkMessageBox.showwarning("Warning", "Please choose a nickname to proceed!")
         elif not free:
-            tkMessageBox.showinfo("Warning", "Please choose another nickname to proceed!")
+            tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
         else:
             self.choose_game()
 
-    def callback_game(self, games, b):
+    def callback_game(self, event, games, b):
         if b <= len(games) - 1:
             print "gameeee " + str(games[b])
             self.c.join_game(games[b])
@@ -222,8 +231,13 @@ class MainApplication(tk.Tk):
         print "value is", e.get()
         self.size = e.get()
 
-        grid_choose.destroy()
-        self.choose_ships()
+        # self.show_grids()
+        if self.size and self.size.isdigit():
+            grid_choose.destroy()
+            self.choose_ships()
+        else:
+            tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
+            grid_choose.lift()
 
     def choose_ships(self):
         self.clear()
@@ -231,27 +245,51 @@ class MainApplication(tk.Tk):
         tk.Label(self, text="Place your ships", font=("Helvetica", 16)).grid(row=0, columnspan=2)
         self.my_grid.grid(row=1, column=0)
 
-        self.my_grid.bind("<1>", self.on_object_click)
+        #self.my_grid.bind("<1>", self.on_object_click)
 
         w = tk.Frame(self)
+        start_point_label = tk.Label(w, text="Starting point (A,1):")
+        start_point_label.grid(row=0, column=1)
+        direction_label = tk.Label(w, text="Direction:")
+        direction_label.grid(row=0, column=2)
+
+        choices = ['Horizontal', 'Vertical']
         ships = {'Carrier': 5, 'Battleship': 4, 'Cruiser': 3, 'Submarine': 3, 'Destroyer': 3}
-        i = 0
+        i = 1
+        print self.size
         for ship, value in sorted(ships.items(), key=operator.itemgetter(1), reverse=True):
             text = ship + " - size " + str(value)
             label = tk.Label(w, text=text, font=("Helvetica", 12), padx=10, pady=10)
             label.grid(row=i, column=0)
+
+            start_point = tk.Entry(w, width=10, font=("Helvetica", 12))
+            start_point.grid(row=i, column=1)
+
+            direction = ttk.Combobox(w, values=choices, font=("Helvetica", 12), width=15)
+            direction.set("Horizontal")
+            direction.state(['readonly'])
+            direction.grid(row=i, column=2)
+
+            self.ships.append((ship, start_point, direction))
             i += 1
 
-        w.grid(row=1, column=1, sticky="N")
+        w.grid(row=2, column=0, sticky="N")
 
+        okay = tk.Button(self, text="OK", command=lambda: self.send_ships(None), font=("Helvetica", 12), padx=15, pady=10)
+        okay.grid(row=3, column=2, sticky="SE", padx=5, pady=15)
+        cancel = tk.Button(self, text="Cancel", command=self.choose_game, font=("Helvetica", 12),
+                           padx=15, pady=10)
+        cancel.grid(row=3, column=1, sticky="SE", padx=5, pady=15)
 
-       # self.show_grids()
-        if value and value.isdigit():
-            grid_choose.destroy()
-            self.show_grid(value)
+        self.bind("<Return>", self.send_ships)
+
+    def send_ships(self, event):
+        resp = self.c.query_ships(self.ships)
+        if resp:
+            self.show_grids()
         else:
-            tkMessageBox.showinfo("Warning", "You should enter a valid grid size.")
-            grid_choose.lift()
+            tkMessageBox.showwarning("Something went wrong.")
+
 
 
 if __name__ == "__main__":
