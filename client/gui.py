@@ -186,14 +186,13 @@ class MainApplication(tk.Tk):
 
         print self.ships.items()
         for ship, value in self.ships.items():
-            print ship, value
             ship_size = self.game.identifier.get(ship)[1]
             if value[2]:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[i], value[1]], fill="blue")
+                    self.my_grid.itemconfig(self.my_grid.rect[value[0], i], fill="blue")
             else:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[0], value[i]], fill="blue")
+                    self.my_grid.itemconfig(self.my_grid.rect[i, value[1]], fill="blue")
 
 
                     # print self.opp2_grid.itemconfig(self.opp2_grid.rect[0, 5], fill="white")
@@ -346,7 +345,6 @@ class MainApplication(tk.Tk):
     def send_ships(self, event):
         msg = {}
         for ship, value in self.ships.items():
-            print ship, value[0].get(), value[1].get()
             if value[0].get() != "":
                 msg[ship] = (str(value[0].get()).upper(), str(value[1].get()))
             else:
