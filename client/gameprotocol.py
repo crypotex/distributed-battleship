@@ -5,12 +5,13 @@ __author__ = "Annika"
 class GameProtocol:
     identifier = {"Carrier": (1, 5), "Battleship": (2, 4), "Cruiser": (3, 3), "Submarine": (4, 3), "Destroyer": (5, 2)}
 
-    def __init__(self, game_id, size, client_nick):
+    def __init__(self, game_id, size, client_nick, master):
         self.game_id = game_id
         self.size = size
         self.table = {}
         self.game_started = False
         self.client_nick = client_nick
+        self.master = master
 
         self.table[client_nick] = [[0 for _ in range(size)] for i in range(size)]
 

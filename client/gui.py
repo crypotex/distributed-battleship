@@ -161,12 +161,12 @@ class MainApplication(tk.Tk):
         my_grid = tk.Label(self, text="My grid", font=("Helvetica", 12))
         my_grid.grid(row=1, column=0)
 
-        label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12), pady=10)
-        label.grid(row=1, column=1)
+        self.opp_label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12), pady=10)
+        self.opp_label.grid(row=1, column=1)
 
         for j in range(2):
-            label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12), pady=10)
-            label.grid(row=4, column=j)
+            self.opp_label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12), pady=10)
+            self.opp_label.grid(row=4, column=j)
 
         self.my_grid = Grid(self, self.size, mine=True)
         self.my_grid.grid(row=2, column=0)
@@ -181,8 +181,10 @@ class MainApplication(tk.Tk):
         self.opp3_grid.grid(row=5, column=1)
 
         start_button = tk.Button(self, text="Start game", padx=10, pady=20,
-                                 command=lambda: self.start_game(start_button))
-        start_button.grid(row=6, columnspan=2)
+                                 command=lambda: self.start_game(start_button, name))
+
+        if self.nickname == self.game.master:
+            start_button.grid(row=6, columnspan=2)
 
         for ship, value in self.ships.items():
             ship_size = self.game.identifier.get(ship)[1]
@@ -249,9 +251,9 @@ class MainApplication(tk.Tk):
     def callback_game(self, event, games, b):
         if b <= len(games) - 1:
             resp = self.c.join_game(games[b])
-            if resp != False:
-                self.size = int(resp)
-                self.init_board(games[b])
+            if resp:
+                self.size = int(resp[0])
+                self.init_board(games[b], resp[1])
                 self.choose_ships()
             else:
                 tkMessageBox.showwarning("Didn't get grid size from server.")
@@ -275,19 +277,18 @@ class MainApplication(tk.Tk):
 
             self.wait_window(choose_grid)
 
-    def init_board(self, gid):
-        self.game = gp.GameProtocol(game_id=gid, size=self.size, client_nick=self.nickname)
+    def init_board(self, gid, game_master):
+        self.game = gp.GameProtocol(game_id=gid, size=self.size, client_nick=self.nickname, master=game_master)
 
     def ok(self, event, grid_choose, e):
         self.size = e.get()
 
-        # self.show_grids()
         if self.size and self.size.isdigit():
             self.size = int(self.size)
             resp = self.c.create_game(self.size)
             if resp:
                 grid_choose.destroy()
-                self.init_board(resp[1])
+                self.init_board(resp[1], self.nickname)
                 self.choose_ships()
             else:
                 tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
