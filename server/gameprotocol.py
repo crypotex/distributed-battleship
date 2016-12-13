@@ -57,9 +57,9 @@ class GameProtocol:
                 self.table[client_nick][x][i] = identifier
         return True
 
-    def start_game(self, client_nick):
+    def start_game(self):
         if all([len(self.alive_ships[e]) == 5 for e in self.alive_ships]) and len(self.table) > 1:
-            return str([nick for nick in self.table])
+            return json.dump([nick for nick in self.table], encoding='utf-8')
         else:
             return False
 
