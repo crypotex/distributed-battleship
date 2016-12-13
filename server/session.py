@@ -66,8 +66,8 @@ class Session:
                 return cm.RSP_BAD_NICK
 
         elif req == cm.QUERY_GAMES:
-            games = json.dumps( [i for i in self.games] , encoding='utf-8')
-            return cm.MSG_FIELD_SEP.join(cm.RSP_OK, games)
+            games = json.dumps([i for i in self.games], encoding='utf-8')
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, games])
 
         elif req == cm.QUERY_NEW_GAME:
             resp = self.new_game(size=int(extra[1]), master=client.nick)
