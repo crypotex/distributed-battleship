@@ -121,6 +121,19 @@ class Comm:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
+    def query_start_game(self, game_id):
+        msg = cm.MSG_FIELD_SEP.join([cm.START_GAME, game_id])
+        self.sock.send(msg)
+        LOG.info(cm.CTR_MSGS[cm.START_GAME])
+        msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+        if msg[0] == cm.RSP_OK:
+            LOG.info("Received game info that is being started.")
+            # Assumes that all info about the game that is to be started will be in msg parts 1-...
+            return msg[1:]
+        else:
+            LOG.error(cm.ERR_MSGS[msg[0]])
+            return False
+
     def listen(self):
         # Should remove this as quickly - just to keep the client from terminating
         self.sock.recv(1024)
