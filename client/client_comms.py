@@ -135,6 +135,7 @@ class Comm:
             return False
 
     def query_shoot(self, positions):
+        # the positions should be list of tuples (pairs of coordinates)
         shooting_dump = json.dumps(positions, encoding='utf-8')
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHOOT, shooting_dump])
         self.sock.send(msg)
@@ -147,9 +148,9 @@ class Comm:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
-    def listen(self):
-        # Should remove this as quickly - just to keep the client from terminating
-        self.sock.recv(1024)
+    def listen_start_game(self):
+        response = self.sock.recv(1024)
+        return response
 
     def something(self):
         pass
@@ -158,15 +159,3 @@ class Comm:
 def query_servers():
     # Just a placeholder for now ...
     return ["127.0.0.1", "10.10.10.10"]
-
-
-# for testing
-# c = Comm(DEFAULT_SERVER_INET_ADDR, DEFAULT_SERVER_PORT)
-# msg = c.query_nick("Andre2")
-# print(msg)
-# shipss = {'Carrier': (0, 0, True), 'Battleship': (0, 1, False),
-#           'Cruiser': (1, 1, True), 'Submarine': (1, 2, True),
-#           'Destroyer': (4, 3, True)}
-# msg = c.query_ships(shipss)
-# print(msg)
-# c.listen()
