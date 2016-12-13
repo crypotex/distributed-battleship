@@ -78,7 +78,7 @@ class Server:
                     flippidy = resp.split(cm.MSG_FIELD_SEP)
                     for nick in flippidy[1]:
                         self.session.clients[nick].socket.send(resp)
-                else
+                else:
                     client.socket.send(resp)
                 LOG.info("Response is: %s." % resp)
 
