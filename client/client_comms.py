@@ -10,6 +10,8 @@ except ImportError:
     sys.path.append(top_path)
     import common as cm
 import json
+import gameprotocol as gp
+
 """
 Responsible for client side communication between user and server
 Should make it use RPC and Rabbit
@@ -79,13 +81,13 @@ class Comm:
     # Is expected that server thread already knows who it is talking to, so no need for a nick, if not
     # Then these methods need to have a nick with them
     def create_game(self, game):
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_NEW_GAME, game])
+        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_NEW_GAME, str(game)])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_NEW_GAME])
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
         if msg[0] == cm.RSP_OK:
             LOG.info("Game created successfully.")
-            return True
+            return True, msg[1]
         else:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False

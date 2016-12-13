@@ -1,11 +1,13 @@
 import Tkinter as tk
-import operator
-import tkMessageBox
 import ttk
+import tkMessageBox
+import operator
 
 from client_comms import Comm
 from client_comms import DEFAULT_SERVER_PORT
 from client_comms import query_servers
+
+import gameprotocol as gp
 
 # http://stackoverflow.com/questions/4781184/tkinter-displaying-a-square-grid
 X_OFFSET = 10
@@ -27,7 +29,7 @@ class Grid(tk.Canvas):
         self.make_grid()
 
     def make_grid(self):
-        # TODO: lisada, et n2itaks numbreid ja t2hti
+        #TODO: lisada, et n2itaks numbreid ja t2hti
         for column in range(self.columns):
             for row in range(self.rows):
                 x1 = column * self.cellwidth + X_OFFSET
@@ -50,9 +52,8 @@ class MainApplication(tk.Tk):
         self.center(650, 800)
         self.v = tk.IntVar()
         self.v2 = tk.IntVar()
-        self.nickname = tk.Entry(self, width=30)
 
-        self.ships = []
+        self.ships = {}
 
         self.servers = query_servers()
         self.choose_server()
@@ -93,18 +94,17 @@ class MainApplication(tk.Tk):
                                   padx=15, pady=10)
         nickname_label.pack(fill=tk.X)
 
-        self.nickname = tk.Entry(self, width=30)
-        self.nickname.pack(anchor=tk.W, padx=15, pady=10)
-        self.nickname.focus()
+        nickname = tk.Entry(self, width=30)
+        nickname.pack(anchor=tk.W, padx=15, pady=10)
+        nickname.focus()
 
-        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None), font=("Helvetica", 12), padx=15,
-                         pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None, nickname.get()), font=("Helvetica", 12), padx=15, pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_server, font=("Helvetica", 12),
                            padx=15, pady=10)
         cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
 
-        self.bind("<Return>", self.callback_nickname)
+        self.bind("<Return>", lambda e: self.callback_nickname(e, nickname.get()))
 
     def choose_game(self):
         self.clear()
@@ -192,8 +192,7 @@ class MainApplication(tk.Tk):
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
-    def callback_nickname(self, event):
-        nickname = self.nickname.get()
+    def callback_nickname(self, event, nickname):
         free = self.c.query_nick(nickname)
 
         if not nickname:
@@ -201,6 +200,7 @@ class MainApplication(tk.Tk):
         elif not free:
             tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
         else:
+            self.nickname = nickname
             self.choose_game()
 
     def callback_game(self, event, games, b):
@@ -208,6 +208,7 @@ class MainApplication(tk.Tk):
             print "gameeee " + str(games[b])
             self.c.join_game(games[b])
             self.size = 10
+            self.init_board(games[b])
             self.choose_ships()
             # TODO: siin peab serverist saama gridi suuruse
         else:
@@ -229,14 +230,19 @@ class MainApplication(tk.Tk):
 
             self.wait_window(choose_grid)
 
+    def init_board(self, gid):
+        self.game = gp.GameProtocol(game_id=gid, size=self.size, client_nick=self.nickname)
+
     def ok(self, grid_choose, e):
         self.size = e.get()
 
         # self.show_grids()
         if self.size and self.size.isdigit():
+            self.size = int(self.size)
             resp = self.c.create_game(self.size)
             if resp:
                 grid_choose.destroy()
+                self.init_board(resp[1])
                 self.choose_ships()
             else:
                 tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
@@ -276,7 +282,7 @@ class MainApplication(tk.Tk):
             direction.state(['readonly'])
             direction.grid(row=i, column=2)
 
-            self.ships.append((ship, start_point, direction))
+            self.ships[ship] = (start_point, direction)
             i += 1
 
         w.grid(row=2, column=0, sticky="N")
@@ -291,7 +297,13 @@ class MainApplication(tk.Tk):
         self.bind("<Return>", self.send_ships)
 
     def send_ships(self, event):
-        resp = self.c.query_ships(self.ships)
+        msg = {}
+        for ship, value in self.ships.items():
+            msg[ship] = (str(value[0].get()).upper(), str(value[1].get()))
+
+        print msg
+        self.game.place_ships(msg)
+        resp = self.c.query_place_ships(msg)
         if resp:
             self.show_grids()
         else:
