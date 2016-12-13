@@ -43,19 +43,19 @@ class GameProtocol:
         # Direction on horisontaalne
         identifier, ship_length = self.identifier[ship]
         if horizontal:
-            if x + ship_length > self.size:
-                return False
-            for i in range(x, x + ship_length):
-                if self.table[client_nick][i][y] != 0:
-                    return False
-                self.table[client_nick][i][y] = identifier
-        else:
             if y + ship_length > self.size:
                 return False
             for i in range(y, y + ship_length):
                 if self.table[client_nick][x][i] != 0:
                     return False
                 self.table[client_nick][x][i] = identifier
+        else:
+            if x + ship_length > self.size:
+                return False
+            for i in range(x, x + ship_length):
+                if self.table[client_nick][i][y] != 0:
+                    return False
+                self.table[client_nick][i][y] = identifier
         return True
 
     def start_game(self):

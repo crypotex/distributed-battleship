@@ -353,14 +353,17 @@ class MainApplication(tk.Tk):
                 tkMessageBox.showwarning("Warning", "Please enter all coordinates.")
                 return
         process_ships = self.game.place_ships(msg)
-        resp = self.c.query_place_ships(self.game.game_id, process_ships)
-        if resp:
-            self.ships = {}
-            self.ships = process_ships
+        if process_ships:
+            resp = self.c.query_place_ships(self.game.game_id, process_ships)
+            if resp:
+                self.ships = {}
+                self.ships = process_ships
 
-            self.show_grids()
+                self.show_grids()
+            else:
+                tkMessageBox.showwarning("Warning", "Something went wrong.")
         else:
-            tkMessageBox.showwarning("Warning", "Something went wrong.")
+            tkMessageBox.showwarning("Warning", "Choose your ships correctly.")
 
 
 if __name__ == "__main__":
