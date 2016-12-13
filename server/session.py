@@ -53,6 +53,16 @@ class Session:
         else:
             return cm.RSP_NO_SUCH_GAME
 
+    def start_game(self, game_id, client):
+        if self.games[game_id].master == client:
+            resp = self.games[game_id].start_game(client)
+            if resp:
+                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, resp])
+            else:
+                return cm.RSP_SHIPS_NOT_PLACED
+        else:
+            return cm.RSP_NOT_MASTER
+
     def handle_request(self, msg, client):
         it = iter(msg.split(cm.MSG_FIELD_SEP))
         req = it.next()
@@ -85,12 +95,8 @@ class Session:
                 return cm.RSP_SHIPS_PLACEMENT
 
         elif req == cm.START_GAME:
-            resp = self.games[extra[0]].start_game(client)
-            if resp:
-                print(resp)
-                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, resp])
-            else:
-                return cm.RSP_SHIPS_NOT_PLACED
+            resp = self.start_game(extra[0], client)
+            return resp
 
 
         else:

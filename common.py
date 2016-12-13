@@ -27,6 +27,7 @@ RSP_NO_SUCH_CLIENT = '6'
 RSP_GAME_STARTED = '7'
 RSP_NO_SUCH_GAME = '8'
 RSP_SHIPS_NOT_PLACED = '9'
+RSP_NOT_MASTER = '10'
 
 RSP_NOT_IMPLEMENTED_YET = '667'
 
@@ -40,6 +41,7 @@ ERR_MSGS = {RSP_OK: 'No Error',
             RSP_GAME_STARTED: "The game that client wants to join, has already started",
             RSP_NO_SUCH_GAME: "The game with such ID does not exist.",
             RSP_SHIPS_NOT_PLACED: "Some players have not placed their ships yet.",
+            RSP_NOT_MASTER: "Not master, so cannot create game and some other stuff maybe...",
 
             RSP_NOT_IMPLEMENTED_YET: "Unimplemented functionality! Implement it!"}
 # Field separator for sending multiple values ---------------------------------
