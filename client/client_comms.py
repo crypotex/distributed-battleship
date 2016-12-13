@@ -101,7 +101,10 @@ class Comm:
         if msg[0] == cm.RSP_OK:
             LOG.info("Game joined successfully.")
             # Probably needs a game as a second part of message
-            return msg[1]
+            loading = json.loads(msg[1], encoding='utf-8')
+            size = loading[0]
+            master = loading[1]
+            return size, master
             # If not then:
             # return True
         else:
