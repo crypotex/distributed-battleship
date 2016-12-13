@@ -1,10 +1,10 @@
 import Tkinter as tk
-import ttk
+import operator
 import tkMessageBox
+import ttk
 
 from client_comms import Comm
 from client_comms import DEFAULT_SERVER_PORT
-import operator
 from client_comms import query_servers
 
 # http://stackoverflow.com/questions/4781184/tkinter-displaying-a-square-grid
@@ -27,7 +27,7 @@ class Grid(tk.Canvas):
         self.make_grid()
 
     def make_grid(self):
-        #TODO: lisada, et n2itaks numbreid ja t2hti
+        # TODO: lisada, et n2itaks numbreid ja t2hti
         for column in range(self.columns):
             for row in range(self.rows):
                 x1 = column * self.cellwidth + X_OFFSET
@@ -74,7 +74,8 @@ class MainApplication(tk.Tk):
                 w.select()
             w.pack(fill=tk.X)
 
-        okay = tk.Button(self, text="OK", command=lambda: self.callback_server(None), font=("Helvetica", 12), padx=15, pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_server(None), font=("Helvetica", 12), padx=15,
+                         pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.destroy, font=("Helvetica", 12),
                            padx=15, pady=10)
@@ -96,7 +97,8 @@ class MainApplication(tk.Tk):
         self.nickname.pack(anchor=tk.W, padx=15, pady=10)
         self.nickname.focus()
 
-        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None), font=("Helvetica", 12), padx=15, pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None), font=("Helvetica", 12), padx=15,
+                         pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_server, font=("Helvetica", 12),
                            padx=15, pady=10)
@@ -113,8 +115,9 @@ class MainApplication(tk.Tk):
                          padx=15, pady=10)
         label.pack(fill=tk.X)
 
-        # games = self.c.query_games()
-        games = ["First game", "Second game"]
+        games = eval(self.c.query_games())
+        # games = ["First game", "Second game"]
+
         for val, game in enumerate(games):
             w = tk.Radiobutton(self, text=game, variable=self.v2, value=val, anchor=tk.W,
                                font=("Helvetica", 11), padx=10, pady=10)
@@ -185,7 +188,7 @@ class MainApplication(tk.Tk):
 
     def callback_server(self, event):
         host = self.servers[self.v.get()]
-        self.c = Comm(host, DEFAULT_SERVER_PORT)  # for time being
+        self.c = Comm(host, DEFAULT_SERVER_PORT)
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
@@ -204,7 +207,6 @@ class MainApplication(tk.Tk):
         if b <= len(games) - 1:
             print "gameeee " + str(games[b])
             self.c.join_game(games[b])
-            # TODO: v6ib kohe serverisse saata, millise m2nguga liituda soovib
             self.size = 10
             self.choose_ships()
             # TODO: siin peab serverist saama gridi suuruse
@@ -228,13 +230,17 @@ class MainApplication(tk.Tk):
             self.wait_window(choose_grid)
 
     def ok(self, grid_choose, e):
-        print "value is", e.get()
         self.size = e.get()
 
         # self.show_grids()
         if self.size and self.size.isdigit():
-            grid_choose.destroy()
-            self.choose_ships()
+            resp = self.c.create_game(self.size)
+            if resp:
+                grid_choose.destroy()
+                self.choose_ships()
+            else:
+                tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
+                grid_choose.lift()
         else:
             tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
             grid_choose.lift()
@@ -245,7 +251,7 @@ class MainApplication(tk.Tk):
         tk.Label(self, text="Place your ships", font=("Helvetica", 16)).grid(row=0, columnspan=2)
         self.my_grid.grid(row=1, column=0)
 
-        #self.my_grid.bind("<1>", self.on_object_click)
+        # self.my_grid.bind("<1>", self.on_object_click)
 
         w = tk.Frame(self)
         start_point_label = tk.Label(w, text="Starting point (A,1):")
@@ -275,7 +281,8 @@ class MainApplication(tk.Tk):
 
         w.grid(row=2, column=0, sticky="N")
 
-        okay = tk.Button(self, text="OK", command=lambda: self.send_ships(None), font=("Helvetica", 12), padx=15, pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.send_ships(None), font=("Helvetica", 12), padx=15,
+                         pady=10)
         okay.grid(row=3, column=2, sticky="SE", padx=5, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_game, font=("Helvetica", 12),
                            padx=15, pady=10)

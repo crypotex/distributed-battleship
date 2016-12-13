@@ -70,7 +70,7 @@ class Session:
             return cm.MSG_FIELD_SEP.join([cm.RSP_OK, games])
 
         elif req == cm.QUERY_NEW_GAME:
-            resp = self.new_game(size=int(extra[1]), master=client.nick)
+            resp = self.new_game(size=int(extra[0]), master=client.nick)
             return resp
 
         elif req == cm.QUERY_JOIN_GAME:
