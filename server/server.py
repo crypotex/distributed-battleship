@@ -75,14 +75,17 @@ class Server:
                 msg = client.socket.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
                 LOG.info("Got request with message: %s." % msg)
                 resp = self.session.handle_request(msg, client)
-                if resp == cm.START_GAME:
+                # This is just a fix for now
+                if resp == cm.START_GAME[0]:
                     flippidy = resp.split(cm.MSG_FIELD_SEP)[1]
                     plappady = json.loads(flippidy, encoding='utf-8')
+                    print(plappady)
                     for nick in plappady:
                         self.session.clients[nick].socket.send(resp)
+                        LOG.info("Multi-Response is: %s." % resp)
                 else:
                     client.socket.send(resp)
-                LOG.info("Response is: %s." % resp)
+                    LOG.info("Response is: %s." % resp)
 
             except socket.error as e:
                 LOG.error("Socket error: %s" % (str(e)))
