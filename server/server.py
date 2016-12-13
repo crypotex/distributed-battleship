@@ -7,14 +7,6 @@ from argparse import ArgumentParser
 from session import Session
 from client_class import Client
 
-try:
-    from common import MSG_FIELD_SEP, RSP_OK, QUERY_NICK, QUERY_SHIPS, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
-except ImportError:
-    top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    sys.path.append(top_path)
-    from common import MSG_FIELD_SEP, RSP_OK, QUERY_SHIPS, QUERY_NICK, RSP_SHIPS_PLACEMENT, RSP_NICK_EXISTS
-
-
 
 TCP_RECIEVE_BUFFER_SIZE = 1024*1024
 MAX_PDU_SIZE = 200*1024*1024

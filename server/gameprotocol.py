@@ -57,3 +57,7 @@ class GameProtocol:
 
     def start_game(self):
         pass
+
+    def all_ships_placed(self):
+        pass
+
