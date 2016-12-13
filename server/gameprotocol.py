@@ -20,7 +20,7 @@ class GameProtocol:
             return False
         else:
             self.table[client] = [[0 for _ in range(self.size)] for i in range(self.size)]
-            return True
+            return self.size
 
     def place_ships(self, client_nick, ships):
         enc_ships = json.loads(ships)
