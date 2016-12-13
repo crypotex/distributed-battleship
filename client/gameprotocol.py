@@ -16,6 +16,8 @@ class GameProtocol:
         self.table[client_nick] = [[0 for _ in range(size)] for i in range(size)]
 
     def place_ships(self, ships):
+        processed_ships = {}
+
         if len(ships) != 5:
             return False
         elif set(ships.keys()) != set(self.identifier.keys()):
@@ -40,6 +42,9 @@ class GameProtocol:
                 if not self._process_ship(coords[1], coords[0], horizontal, ship):
                     print(ship)
                     return False
+
+                processed_ships[ship] = (coords[1], coords[0], horizontal)
+            return processed_ships
 
 
 

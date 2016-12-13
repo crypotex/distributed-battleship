@@ -88,7 +88,7 @@ class Session:
             return resp
 
         elif req == cm.QUERY_PLACE_SHIPS:
-            resp = self.games[extra[0]].place_ships(extra[1])
+            resp = self.games[extra[0]].place_ships(client_nick=client.nick, ships=extra[1])
             if resp:
                 return cm.RSP_OK
             else:

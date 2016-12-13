@@ -45,4 +45,4 @@ ERR_MSGS = {RSP_OK: 'No Error',
 
             RSP_NOT_IMPLEMENTED_YET: "Unimplemented functionality! Implement it!"}
 # Field separator for sending multiple values ---------------------------------
-MSG_FIELD_SEP = ':'
+MSG_FIELD_SEP = '$'

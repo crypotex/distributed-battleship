@@ -23,10 +23,10 @@ class GameProtocol:
             return True
 
     def place_ships(self, client_nick, ships):
-        enc_ships = json.loads(ships)
+        enc_ships = json.loads(ships, encoding='utf-8')
         if len(enc_ships) != 5:
             return False
-        elif set(ships.keys()) != set(self.identifier.keys()):
+        elif set(enc_ships.keys()) != set(self.identifier.keys()):
             print(ships.keys())
             return False
         else:
@@ -34,7 +34,7 @@ class GameProtocol:
                 if not self._process_ship(client_nick, params[0], params[1], params[2], ship):
                     print(ship)
                     return False
-            self.alive_ships[client_nick] = {i: True for i in ships.keys()}
+            self.alive_ships[client_nick] = {i: True for i in enc_ships.keys()}
 
             return self.table
 
