@@ -184,18 +184,14 @@ class MainApplication(tk.Tk):
                                  command=lambda: self.start_game(start_button))
         start_button.grid(row=6, columnspan=2)
 
-        print self.ships.items()
         for ship, value in self.ships.items():
             ship_size = self.game.identifier.get(ship)[1]
             if value[2]:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[0], i], fill="blue")
+                    self.my_grid.itemconfig(self.my_grid.rect[value[0], value[1]+i], fill="blue")
             else:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[i, value[1]], fill="blue")
-
-
-                    # print self.opp2_grid.itemconfig(self.opp2_grid.rect[0, 5], fill="white")
+                    self.my_grid.itemconfig(self.my_grid.rect[value[0]+i, value[1]], fill="blue")
 
     def start_game(self, start_button):
         start_button.destroy()
