@@ -37,8 +37,8 @@ class GameProtocol:
         else:
             print(enc_ships)
             for ship, params in enc_ships.items():
-                if not self._process_ship(client_nick, params[1], params[0], params[2], ship):
-                    print(ship)
+                if not self._process_ship(client_nick, params[0], params[1], params[2], ship):
+                    print ship
                     return False
             self.alive_ships[client_nick] = {i: True for i in enc_ships.keys()}
 
