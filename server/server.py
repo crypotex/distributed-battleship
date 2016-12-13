@@ -6,6 +6,12 @@ import logging
 from argparse import ArgumentParser
 from session import Session
 from client_class import Client
+try:
+    import common as cm
+except ImportError:
+    top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(top_path)
+    import common as cm
 
 
 TCP_RECIEVE_BUFFER_SIZE = 1024*1024
@@ -66,9 +72,15 @@ class Server:
         while True:
             try:
                 msg = client.socket.recv(DEFAULT_BUFFER_SIZE).decode('utf-8')
+                LOG.info("Got request with message: %s." % msg)
                 resp = self.session.handle_request(msg, client)
-                client.socket.send(resp)
-                LOG.info("Got request with message: %s, response is: %s." % (msg, resp))
+                if resp == cm.START_GAME:
+                    flippidy = resp.split(cm.MSG_FIELD_SEP)
+                    for nick in flippidy[1]:
+                        self.session.clients[nick].socket.send(resp)
+                else
+                    client.socket.send(resp)
+                LOG.info("Response is: %s." % resp)
 
             except socket.error as e:
                 LOG.error("Socket error: %s" % (str(e)))
