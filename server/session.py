@@ -48,7 +48,7 @@ class Session:
                 # TODO: Client diconnect handling here maybe ?
                 resp = self.games[game_id].user_join_game(client)
                 if resp:
-                    return cm.MSG_FIELD_SEP.join([cm.RSP_OK, str(resp)])
+                    return cm.MSG_FIELD_SEP.join([cm.RSP_OK, resp])
                 else:
                     return cm.RSP_NOT_IMPLEMENTED_YET
         else:
