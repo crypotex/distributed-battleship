@@ -36,7 +36,7 @@ class Session:
             gid = uuid.uuid4()
             game = GameProtocol(game_id=gid, size=size, master=master)
             self.games[gid] = game
-            return cm.RSP_OK
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, gid])
 
     def join_game(self, game_id, client):
         if game_id in self.games:
