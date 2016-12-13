@@ -3,6 +3,7 @@ import sys
 import socket
 import threading
 import logging
+import json
 from argparse import ArgumentParser
 from session import Session
 from client_class import Client
@@ -75,8 +76,9 @@ class Server:
                 LOG.info("Got request with message: %s." % msg)
                 resp = self.session.handle_request(msg, client)
                 if resp == cm.START_GAME:
-                    flippidy = resp.split(cm.MSG_FIELD_SEP)
-                    for nick in flippidy[1]:
+                    flippidy = resp.split(cm.MSG_FIELD_SEP)[1]
+                    plappady = json.loads(flippidy, encoding='utf-8')
+                    for nick in plappady:
                         self.session.clients[nick].socket.send(resp)
                 else:
                     client.socket.send(resp)
