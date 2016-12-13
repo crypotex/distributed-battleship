@@ -10,14 +10,19 @@ from client_comms import query_servers
 import gameprotocol as gp
 
 # http://stackoverflow.com/questions/4781184/tkinter-displaying-a-square-grid
-X_OFFSET = 10
-Y_OFFSET = 10
+X_OFFSET = 30
+Y_OFFSET = 30
 
 
 class Grid(tk.Canvas):
     def __init__(self, master, size, mine=False):
         tk.Canvas.__init__(self, master)
-        self.grid_size = int(size) * 26 + 5  # vv6ib veel muuta, et paremini oleks jaotatud
+        if size <= 9:
+            self.grid_size = int(size) * 35 + 5
+        elif size <= 13:
+            self.grid_size = int(size) * 30 + 5
+        else:
+            self.grid_size = int(size) * 28 + 10  # vv6ib veel muuta, et paremini oleks jaotatud
         self.rows = int(size)
         self.columns = int(size)
         self.cellheight = 25
@@ -29,7 +34,16 @@ class Grid(tk.Canvas):
         self.make_grid()
 
     def make_grid(self):
-        #TODO: lisada, et n2itaks numbreid ja t2hti
+        for i in range(self.rows):
+            x = 15
+            y = i * self.cellheight + Y_OFFSET + 15
+            self.create_text(x, y, text=chr(65 + i))
+
+        for j in range(self.columns):
+            x = j * self.cellwidth + X_OFFSET + 14
+            y = 20
+            self.create_text(x, y, text=j)
+
         for column in range(self.columns):
             for row in range(self.rows):
                 x1 = column * self.cellwidth + X_OFFSET
@@ -98,7 +112,8 @@ class MainApplication(tk.Tk):
         nickname.pack(anchor=tk.W, padx=15, pady=10)
         nickname.focus()
 
-        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None, nickname.get()), font=("Helvetica", 12), padx=15, pady=10)
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_nickname(None, nickname.get()),
+                         font=("Helvetica", 12), padx=15, pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_server, font=("Helvetica", 12),
                            padx=15, pady=10)
@@ -165,7 +180,8 @@ class MainApplication(tk.Tk):
         self.opp3_grid = Grid(self, self.size)
         self.opp3_grid.grid(row=5, column=1)
 
-        start_button = tk.Button(self, text="Start game", padx=10, pady=20, command=lambda: self.start_game(start_button))
+        start_button = tk.Button(self, text="Start game", padx=10, pady=20,
+                                 command=lambda: self.start_game(start_button))
         start_button.grid(row=6, columnspan=2)
 
         print self.ships.items()
@@ -180,7 +196,7 @@ class MainApplication(tk.Tk):
                     self.my_grid.itemconfig(self.my_grid.rect[value[0], value[i]], fill="blue")
 
 
-        # print self.opp2_grid.itemconfig(self.opp2_grid.rect[0, 5], fill="white")
+                    # print self.opp2_grid.itemconfig(self.opp2_grid.rect[0, 5], fill="white")
 
     def start_game(self, start_button):
         start_button.destroy()
@@ -345,7 +361,6 @@ class MainApplication(tk.Tk):
             self.show_grids()
         else:
             tkMessageBox.showwarning("Warning", "Something went wrong.")
-
 
 
 if __name__ == "__main__":
