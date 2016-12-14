@@ -274,12 +274,7 @@ class MainApplication(tk.Tk):
                 tkMessageBox.showwarning("Warning", "No such coordinate exists.")
                 return
 
-        msg = {}
-        msg["nick"] = self.nickname
-        msg["shots_fired"] = coords
-        msg["game_id"] = self.game.game_id
-
-        resp = self.c.query_shoot(msg)
+        resp = self.c.query_shoot(coords, self.nickname, self.game.game_id)
         print resp
 
 
