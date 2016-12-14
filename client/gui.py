@@ -209,7 +209,6 @@ class MainApplication(tk.Tk):
                 resp = self.c.listen_start_game()
                 if resp:
                     opponents = sorted(resp)
-                    print opponents
 
                     j = 0
                     for i in range(len(opponents)):
@@ -223,9 +222,21 @@ class MainApplication(tk.Tk):
                     if self.update_grids(resp[1]):
                         break
 
+    def mark_shots(self, msg):
+        shots = msg['shots_fired']
+        origin = msg['origin']
+
+        for player, v in shots.items():
+            if player == self.nickname and v[-1]:
+                self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
+
+        # TODO: kui shoot'id m88da, siis oponendi kast muud v2rvi
+        # TODO: kui shoot'id kedagi ja saad pihta, siis oponendi grid'is kast punaseks
+
     def update_grids(self, msg):
         print msg
         free_me = False
+        self.mark_shots(msg)
 
         if msg['next'] == self.nickname:
             free_me = True
@@ -240,7 +251,6 @@ class MainApplication(tk.Tk):
         start_button.destroy()
 
         opponents = sorted(self.c.query_start_game(self.game.game_id))
-        print opponents
 
         j = 0
         for i in range(len(opponents)):
