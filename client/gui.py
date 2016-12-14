@@ -202,12 +202,13 @@ class MainApplication(tk.Tk):
 
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
+
         else:
+            self.update()
             while True:
                 resp = self.c.listen_start_game()
                 if resp:
                     opponents = sorted(resp)
-                    print opponents
 
                     j = 0
                     for i in range(len(opponents)):
@@ -218,14 +219,38 @@ class MainApplication(tk.Tk):
             while True:
                 resp = self.c.listen_shots_fired()
                 if resp:
-                    print resp
-                    break
+                    if self.update_grids(resp[1]):
+                        break
+
+    def mark_shots(self, msg):
+        shots = msg['shots_fired']
+        origin = msg['origin']
+
+        for player, v in shots.items():
+            if player == self.nickname and v[-1]:
+                self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
+
+        # TODO: kui shoot'id m88da, siis oponendi kast muud v2rvi
+        # TODO: kui shoot'id kedagi ja saad pihta, siis oponendi grid'is kast punaseks
+
+    def update_grids(self, msg):
+        print msg
+        free_me = False
+        self.mark_shots(msg)
+
+        if msg['next'] == self.nickname:
+            free_me = True
+            self.draw_gamefield(msg['shots_fired'].keys())
+            shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
+                                     padx=30, pady=10)
+            shoot_button.grid(row=8, columnspan=2)
+        self.update()
+        return free_me
 
     def start_game(self, start_button):
         start_button.destroy()
 
         opponents = sorted(self.c.query_start_game(self.game.game_id))
-        print opponents
 
         j = 0
         for i in range(len(opponents)):
@@ -233,6 +258,15 @@ class MainApplication(tk.Tk):
                 self.labels[j].config(text=opponents[i])
                 j += 1
 
+        self.draw_gamefield(opponents)
+
+        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
+                                 padx=30, pady=10)
+        shoot_button.grid(row=8, columnspan=2)
+
+        self.bind("<Return>", self.shoot)
+
+    def draw_gamefield(self, opponents):
         w1 = tk.Frame(self)
         shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
         self.opp1_shoot = tk.Entry(w1, width=10)
@@ -260,16 +294,12 @@ class MainApplication(tk.Tk):
         elif len(opponents) - 1 < 3:
             self.disable_grid(w3)
 
-        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
-        shoot_button.grid(row=8, columnspan=2)
-
-        self.bind("<Return>", self.shoot)
-
     def disable_grid(self, g):
         for child in g.winfo_children():
             child.configure(state='disable')
 
-    def shoot(self, event):
+    def shoot(self, event, shoot_button):
+        shoot_button.destroy()
         coords = {self.opp1_grid.label.cget("text"): self.opp1_shoot.get()}
 
         if self.opp2_shoot.cget('state') != 'disabled':
@@ -294,6 +324,12 @@ class MainApplication(tk.Tk):
         print coords, self.nickname, self.game.game_id
         resp = self.c.query_shoot(coords, self.nickname, self.game.game_id)
         print resp
+
+        while True:
+            resp = self.c.listen_shots_fired()
+            if resp:
+                if self.update_grids(resp[1]):
+                    break
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
