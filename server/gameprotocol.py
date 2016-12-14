@@ -6,6 +6,7 @@ __author__ = "Andre"
 
 class GameProtocol:
     identifier = {"Carrier": (5, 5), "Battleship": (6, 4), "Cruiser": (7, 3), "Submarine": (8, 3), "Destroyer": (9, 2)}
+    reverse_identifier = {5: "Carrier", 6: "Battleship", 7: "Cruiser", 8: "Submarine", 9: "Destroyer"}
     im_hit_im_hit = 1
     i_missed = 2
 
@@ -83,6 +84,8 @@ class GameProtocol:
 
     def shoot_bombs(self, info):
         shooting_gallery = {}
+        origin = self.turn_list[self.current_turn]
+        she_dead = {}
         for nick in info:
             if nick in self.lost_list:
                 shooting_gallery[nick] = ("He dead", )
@@ -92,9 +95,12 @@ class GameProtocol:
                     print
                     if self.table[nick][t_x][t_y] > 0:
                         shooting_gallery[nick] = (t_x, t_y, True)
+                        ship_id = self.table[nick][t_x][t_y]
                         self.table[nick][t_x][t_y] = self.im_hit_im_hit
-                        if all(i < 4 for i in chain(*self.table[nick])):
-                            self.lost_list.append(nick)
+                        if all(i != ship_id for i in chain(*self.table[nick])):
+                            she_dead[nick] = self.reverse_identifier[ship_id]
+                            if all(i < 4 for i in chain(*self.table[nick])):
+                                self.lost_list.append(nick)
                     else:
                         shooting_gallery[nick] = (t_x, t_y, False)
                         self.table[nick][t_x][t_y] = self.i_missed
@@ -109,6 +115,8 @@ class GameProtocol:
             next_player = self.turn_list[self.current_turn]
         result = {"next": next_player,
                   "lost": self.lost_list,
+                  "ships_lost": she_dead,
+                  "origin": origin,
                   "shots_fired": shooting_gallery}
         return json.dumps(result, encoding="utf-8")
 

@@ -154,23 +154,6 @@ class MainApplication(tk.Tk):
             start_button.grid(row=6, columnspan=2)
         else:
             self.process_incoming()
-        # else:
-        #     while True:
-        #         resp = self.c.listen_start_game()
-        #         if resp:
-        #             opponents = sorted(resp)
-        #
-        #             j = 0
-        #             for i in range(len(opponents)):
-        #                 if opponents[i] != self.nickname:
-        #                     self.labels[j].config(text=opponents[i])
-        #                     j += 1
-        #             break
-        #     while True:
-        #         resp = self.c.listen_shots_fired()
-        #         if resp:
-        #             print resp
-        #             break
 
     def start_game(self, start_button):
         start_button.destroy()
@@ -211,14 +194,21 @@ class MainApplication(tk.Tk):
         elif len(opponents) - 1 < 3:
             self.disable_grid(w3)
 
-        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
-        shoot_button.grid(row=8, columnspan=2)
+        self.shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
+        self.shoot_button.grid(row=8, columnspan=2)
 
         self.bind("<Return>", self.shoot)
 
     def disable_grid(self, g):
         for child in g.winfo_children():
+
             child.configure(state='disable')
+
+    def destroy_shoot(self):
+        self.opp1_shoot.destroy()
+        self.opp2_shoot.destroy()
+        self.opp3_shoot.destroy()
+        self.shoot_button.destroy()
 
     def shoot(self, event):
         coords = {self.opp1_grid.label.cget("text"): self.opp1_shoot.get()}
@@ -243,6 +233,33 @@ class MainApplication(tk.Tk):
                 return
 
         self.c.query_shoot(coords, self.nickname, self.game.game_id)
+
+    def show_hits(self, msg):
+        shots = msg['shots_fired']
+        origin = msg['origin']
+        print "Show_hits: ", str(msg)
+
+        for player, v in shots.items():
+            if self.nickname == origin:
+                if self.opp1_grid.label.cget('text') == player:
+                    if not v[-1]:
+                        self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+                    else:
+                        self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[v[0], v[1]], fill="red")
+
+                if self.opp2_grid.label.cget('text') == player:
+                    if not v[-1]:
+                        self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+                    else:
+                        self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[v[0], v[1]], fill="red")
+
+                if self.opp3_grid.label.cget('text') == player:
+                    if not v[-1]:
+                        self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+                    else:
+                        self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[v[0], v[1]], fill="red")
+            elif self.nickname == player and v[-1]:
+                self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -431,10 +448,13 @@ class MainApplication(tk.Tk):
                         extra = json.loads(msg[1])
                         if self.nickname == extra["next"]:
                             self.shooting_frame(self.opponents)
+                        if self.nickname == extra["origin"]:
+                            self.destroy_shoot()
+                            self.show_hits(extra)
                         else:
-                            self.show_hits()
+                            self.show_hits(extra)
                     else:
-                        print("Something went wrong from getting opponents names.")
+                        print("Something went wrong from getting shots fired.")
 
             except Queue.Empty:
                 pass
@@ -446,7 +466,7 @@ if __name__ == "__main__":
     # Close socket when client closes window
     # app.c.sock.close()
 
-# TODO: show_hits to others
-# TODO: remove shooting_frame after processing coordinates and shot executes
-# TODO: send origin with shots_fired response from server
 # TODO: don't reload nickname screen all the time when nickname exists or whatever
+# TODO: if you get a hit, you can keep shooting at that player's ships
+# TODO: cannot start game before at least one opponent
+# TODO: show opponent's name/notify master when somebody joins game
