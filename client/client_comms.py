@@ -129,7 +129,7 @@ class Comm:
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.START_GAME])
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        if msg[0] == cm.RSP_GAME_STARTED:
+        if msg[0] == cm.RSP_MULTI_OK:
             LOG.info("Received game info that is being started.")
             # Assumes that all info about the game that is to be started will be in msg parts 1-...
             return json.loads(msg[1], encoding='utf-8')
