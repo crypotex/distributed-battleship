@@ -83,6 +83,7 @@ class GameProtocol:
 
     def shoot_bombs(self, info):
         shooting_gallery = {}
+        origin = self.turn_list[self.current_turn]
         for nick in info:
             if nick in self.lost_list:
                 shooting_gallery[nick] = ("He dead", )
@@ -109,6 +110,7 @@ class GameProtocol:
             next_player = self.turn_list[self.current_turn]
         result = {"next": next_player,
                   "lost": self.lost_list,
+                  "origin": origin,
                   "shots_fired": shooting_gallery}
         return json.dumps(result, encoding="utf-8")
 
