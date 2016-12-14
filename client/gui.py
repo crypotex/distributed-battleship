@@ -214,6 +214,11 @@ class MainApplication(tk.Tk):
                             self.labels[j].config(text=opponents[i])
                             j += 1
                     break
+            while True:
+                resp = self.c.listen_shots_fired()
+                if resp:
+                    print resp
+                    break
 
     def start_game(self, start_button):
         start_button.destroy()

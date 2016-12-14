@@ -147,7 +147,7 @@ class Comm:
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        if msg[0] == cm.RSP_OK:
+        if msg[0] == cm.RSP_MULTI_OK:
             LOG.info("Shot processed successfully.")
             return True
         else:
