@@ -242,9 +242,7 @@ class MainApplication(tk.Tk):
                 tkMessageBox.showwarning("Warning", "No such coordinate exists.")
                 return
 
-        print coords, self.nickname, self.game.game_id
-        resp = self.c.query_shoot(coords, self.nickname, self.game.game_id)
-        print resp
+        self.c.query_shoot(coords, self.nickname, self.game.game_id)
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -374,6 +372,7 @@ class MainApplication(tk.Tk):
         while self.queue.qsize():
             try:
                 msg = self.queue.get(0).split(cm.MSG_FIELD_SEP)
+                print self.state, str(msg)
                 if self.state == "NO_NICK":
                     if msg[0] != cm.RSP_OK:
                         tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
@@ -422,10 +421,18 @@ class MainApplication(tk.Tk):
                         self.choose_ships()
                 elif self.state == "NO_START_GAME":
                     if msg[0] == cm.RSP_MULTI_OK:
-                        self.change_names(eval(msg[1]))
+                        self.opponents = eval(msg[1])
+                        self.change_names(self.opponents)
                         self.state = "START_GAME"
                         if self.game.master == self.nickname:
-                            self.shooting_frame(eval(msg[1]))
+                            self.shooting_frame(self.opponents)
+                elif self.state == "START_GAME":
+                    if msg[0] == cm.RSP_MULTI_OK:
+                        extra = json.loads(msg[1])
+                        if self.nickname == extra["next"]:
+                            self.shooting_frame(self.opponents)
+                        else:
+                            self.show_hits()
                     else:
                         print("Something went wrong from getting opponents names.")
 
@@ -439,3 +446,7 @@ if __name__ == "__main__":
     # Close socket when client closes window
     # app.c.sock.close()
 
+# TODO: show_hits to others
+# TODO: remove shooting_frame after processing coordinates and shot executes
+# TODO: send origin with shots_fired response from server
+# TODO: don't reload nickname screen all the time when nickname exists or whatever
