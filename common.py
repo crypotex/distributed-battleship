@@ -38,6 +38,8 @@ RSP_MULTI_OK = '13'
 RSP_NOT_IMPLEMENTED_YET = '667'
 
 ERR_MSGS = {RSP_OK: 'No Error',
+            RSP_MULTI_OK: "No error for multi response messages.",
+
             RSP_NICK_EXISTS: 'Such nickname already Exists',
             RSP_SHIPS_PLACEMENT: 'Ships cannot be placed in such way.',
             RSP_BAD_NICK: 'The chosen nickname is not suitable.',
@@ -49,6 +51,7 @@ ERR_MSGS = {RSP_OK: 'No Error',
             RSP_SHIPS_NOT_PLACED: "Some players have not placed their ships yet or only 1 player connected.",
             RSP_NOT_MASTER: "Not master, so cannot create game and some other stuff maybe...",
             RSP_INVALID_SHOT: "Shot placed on invalid square or square has already been shot.",
+            RSP_WAIT_YOUR_TURN: "It is not your turn, wait until it is your turn.",
             RSP_NOT_IMPLEMENTED_YET: "Unimplemented functionality! Implement it!"}
 # Field separator for sending multiple values ---------------------------------
 MSG_FIELD_SEP = '$'
