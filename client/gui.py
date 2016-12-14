@@ -2,81 +2,32 @@ import Tkinter as tk
 import ttk
 import tkMessageBox
 import operator
-import select
+import Queue
+import os
+import sys
+import json
 
 from client_comms import Comm
 from client_comms import DEFAULT_SERVER_PORT
 from client_comms import query_servers
+import grid
 
+try:
+    import common as cm
+except ImportError:
+    top_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(top_path)
+    import common as cm
 import gameprotocol as gp
-
-# http://stackoverflow.com/questions/4781184/tkinter-displaying-a-square-grid
-X_OFFSET = 30
-Y_OFFSET = 30
-
-
-class Grid(tk.Canvas):
-    def __init__(self, master, size, mine=False):
-        tk.Canvas.__init__(self, master)
-        if size <= 9:
-            self.grid_size = int(size) * 35 + 5
-        elif size <= 13:
-            self.grid_size = int(size) * 30 + 5
-        else:
-            self.grid_size = int(size) * 28 + 10
-        self.rows = int(size)
-        self.columns = int(size)
-        self.cellheight = 25
-        self.cellwidth = 25
-        self.rect = {}
-        self.config(height=self.grid_size, width=self.grid_size)
-        self.mine = mine
-        self.player = ""
-
-        self.make_grid()
-
-    def make_grid(self):
-        for i in range(self.rows):
-            x = 15
-            y = i * self.cellheight + Y_OFFSET + 15
-            self.create_text(x, y, text=chr(65 + i))
-
-        for j in range(self.columns):
-            x = j * self.cellwidth + X_OFFSET + 14
-            y = 20
-            self.create_text(x, y, text=j)
-
-        for column in range(self.columns):
-            for row in range(self.rows):
-                x1 = column * self.cellwidth + X_OFFSET
-                y1 = row * self.cellheight + Y_OFFSET
-                x2 = x1 + self.cellwidth
-                y2 = y1 + self.cellheight
-                self.rect[row, column] = self.create_rectangle(x1, y1, x2, y2)
-
-                if self.mine:
-                    self.itemconfig(self.rect[row, column], tags=self)
-
-
-class GridFrame(tk.Frame):
-    def __init__(self, master, size, mine):
-        tk.Frame.__init__(self, master=master)
-
-        self.master = master
-        self.gridp = Grid(self, size, mine=mine)
-
-        if mine:
-            self.label = tk.Label(self, text="My grid", font=("Helvetica", 12))
-        else:
-            self.label = tk.Label(self, text="Opponent", font=("Helvetica", 12))
-
-        self.label.grid(row=0, column=0)
-        self.gridp.grid(row=1, column=0)
 
 
 class MainApplication(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+
+        self.queue = Queue.Queue()
+        self.c = Comm(self.queue, self)
+        self.state = "NO_CONN"
 
         # <create the rest of your GUI here>
         self.center(650, 800)
@@ -84,7 +35,6 @@ class MainApplication(tk.Tk):
         self.v2 = tk.IntVar()
 
         self.ships = {}
-
         self.servers = query_servers()
         self.choose_server()
 
@@ -146,29 +96,29 @@ class MainApplication(tk.Tk):
                          padx=15, pady=10)
         label.pack(fill=tk.X)
 
-        games = eval(self.c.query_games())
-
-        for val, game in enumerate(games):
+        for val, game in enumerate(self.games):
             w = tk.Radiobutton(self, text=game, variable=self.v2, value=val, anchor=tk.W,
                                font=("Helvetica", 11), padx=10, pady=10)
             if val == 0:
                 w.select()
             w.pack(fill=tk.X)
 
-        new_game = tk.Radiobutton(self, text="New game", variable=self.v2, value=(len(games)), anchor=tk.W,
+        new_game = tk.Radiobutton(self, text="New game", variable=self.v2, value=(len(self.games)), anchor=tk.W,
                                   font=("Helvetica", 11), padx=10, pady=10)
         new_game.pack(fill=tk.X)
-        okay = tk.Button(self, text="OK", command=lambda: self.callback_game(None, games, self.v2.get()),
+        okay = tk.Button(self, text="OK", command=lambda: self.callback_game(None, self.games, self.v2.get()),
                          font=("Helvetica", 12), padx=15, pady=10)
         okay.pack(anchor=tk.SE, side=tk.RIGHT, padx=15, pady=15)
         cancel = tk.Button(self, text="Cancel", command=self.choose_server, font=("Helvetica", 12),
                            padx=15, pady=10)
         cancel.pack(anchor=tk.SE, side=tk.RIGHT, padx=5, pady=15)
 
-        self.bind("<Return>", lambda e: self.callback_game(e, games, self.v2.get()))
+        self.bind("<Return>", lambda e: self.callback_game(e, self.games, self.v2.get()))
 
     def show_grids(self):
         self.clear()
+
+        self.state = "NO_START_GAME"
 
         name = self.game.game_id
         title = tk.Label(self, text=str(name), font=("Helvetica", 16))
@@ -176,15 +126,15 @@ class MainApplication(tk.Tk):
 
         self.labels = []
 
-        self.my_grid = GridFrame(master=self, size=self.size, mine=True)
+        self.my_grid = grid.GridFrame(master=self, size=self.size, mine=True)
         self.my_grid.grid(row=1, column=0)
-        self.opp1_grid = GridFrame(master=self, size=self.size, mine=False)
+        self.opp1_grid = grid.GridFrame(master=self, size=self.size, mine=False)
         self.opp1_grid.grid(row=1, column=1)
         self.labels.append(self.opp1_grid.label)
-        self.opp2_grid = GridFrame(master=self, size=self.size, mine=False)
+        self.opp2_grid = grid.GridFrame(master=self, size=self.size, mine=False)
         self.opp2_grid.grid(row=3, column=0)
         self.labels.append(self.opp2_grid.label)
-        self.opp3_grid = GridFrame(master=self, size=self.size, mine=False)
+        self.opp3_grid = grid.GridFrame(master=self, size=self.size, mine=False)
         self.opp3_grid.grid(row=3, column=1)
         self.labels.append(self.opp3_grid.label)
 
@@ -203,36 +153,37 @@ class MainApplication(tk.Tk):
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
         else:
-            while True:
-                resp = self.c.listen_start_game()
-                if resp:
-                    opponents = sorted(resp)
-                    print opponents
-
-                    j = 0
-                    for i in range(len(opponents)):
-                        if opponents[i] != self.nickname:
-                            self.labels[j].config(text=opponents[i])
-                            j += 1
-                    break
-            while True:
-                resp = self.c.listen_shots_fired()
-                if resp:
-                    print resp
-                    break
+            self.process_incoming()
+        # else:
+        #     while True:
+        #         resp = self.c.listen_start_game()
+        #         if resp:
+        #             opponents = sorted(resp)
+        #
+        #             j = 0
+        #             for i in range(len(opponents)):
+        #                 if opponents[i] != self.nickname:
+        #                     self.labels[j].config(text=opponents[i])
+        #                     j += 1
+        #             break
+        #     while True:
+        #         resp = self.c.listen_shots_fired()
+        #         if resp:
+        #             print resp
+        #             break
 
     def start_game(self, start_button):
         start_button.destroy()
+        self.c.query_start_game(self.game.game_id)
 
-        opponents = sorted(self.c.query_start_game(self.game.game_id))
-        print opponents
-
+    def change_names(self, opponents):
         j = 0
         for i in range(len(opponents)):
             if opponents[i] != self.nickname:
                 self.labels[j].config(text=opponents[i])
                 j += 1
 
+    def shooting_frame(self, opponents):
         w1 = tk.Frame(self)
         shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
         self.opp1_shoot = tk.Entry(w1, width=10)
@@ -306,73 +257,58 @@ class MainApplication(tk.Tk):
 
     def callback_server(self, event):
         host = self.servers[self.v.get()]
-        self.c = Comm(host, DEFAULT_SERVER_PORT)
+        self.c.connect_to_server(host, DEFAULT_SERVER_PORT)
+        self.state = "NO_NICK"
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
     def callback_nickname(self, event, nickname):
-        free = self.c.query_nick(nickname)
-
         if not nickname:
             tkMessageBox.showwarning("Warning", "Please choose a nickname to proceed!")
-        elif not free:
-            tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
         else:
-            self.nickname = nickname
-            self.choose_game()
+            self.c.query_nick(nickname)
 
     def callback_game(self, event, games, b):
         if b <= len(games) - 1:
-            resp = self.c.join_game(games[b])
-            if resp:
-                self.size = int(resp[0])
-                self.init_board(games[b], resp[1])
-                self.choose_ships()
-            else:
-                tkMessageBox.showwarning("Didn't get grid size from server.")
+            self.joining_game_id = b
+            self.c.join_game(games[b])
+            self.state = "NO_JOIN"
         else:
-            choose_grid = tk.Toplevel(self)
-            choose_grid.title("Choose the grid size")
+            self.choose_grid = tk.Toplevel(self)
+            self.choose_grid.title("Choose the grid size")
             w = self.winfo_screenwidth()
             h = self.winfo_screenheight()
-            choose_grid.geometry("250x100+%d+%d" % ((w - 250) / 2, (h - 100) / 2))
+            self.choose_grid.geometry("250x100+%d+%d" % ((w - 250) / 2, (h - 100) / 2))
 
-            tk.Label(choose_grid, text="Grid size", padx=5, pady=5).pack()
+            tk.Label(self.choose_grid, text="Grid size", padx=5, pady=5).pack()
 
-            e = tk.Entry(choose_grid, width=15)
+            e = tk.Entry(self.choose_grid, width=15)
             e.pack(padx=5, pady=5)
             e.focus()
 
-            b = tk.Button(choose_grid, text="OK", command=lambda: self.ok(None, choose_grid, e))
+            b = tk.Button(self.choose_grid, text="OK", command=lambda: self.ok(None, e))
             b.pack(pady=5, padx=5)
 
-            choose_grid.bind("<Return>", lambda event: self.ok(event, choose_grid, e))
+            self.choose_grid.bind("<Return>", lambda event: self.ok(event, e))
 
-            self.wait_window(choose_grid)
+            self.wait_window(self.choose_grid)
 
     def init_board(self, gid, game_master):
         self.game = gp.GameProtocol(game_id=gid, size=self.size, client_nick=self.nickname, master=game_master)
 
-    def ok(self, event, grid_choose, e):
+    def ok(self, event, e):
         self.size = e.get()
 
         if self.size and self.size.isdigit():
             self.size = int(self.size)
-            resp = self.c.create_game(self.size)
-            if resp:
-                grid_choose.destroy()
-                self.init_board(resp[1], self.nickname)
-                self.choose_ships()
-            else:
-                tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
-                grid_choose.lift()
+            self.c.create_game(self.size)
         else:
             tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
-            grid_choose.lift()
+            self.choose_grid.lift()
 
     def choose_ships(self):
         self.clear()
-        self.my_grid = Grid(self, self.size)
+        self.my_grid = grid.Grid(self, self.size)
         tk.Label(self, text="Place your ships", font=("Helvetica", 16)).grid(row=0, columnspan=2)
         self.my_grid.grid(row=1, column=0)
 
@@ -422,11 +358,7 @@ class MainApplication(tk.Tk):
             tkMessageBox.showwarning("Warning", "Ships didn't fit.")
             return
         else:
-            resp = self.c.query_place_ships(self.game.game_id, process_ships)
-            if resp:
-                self.ships = {}
-                self.ships = process_ships
-                self.show_grids()
+            self.c.query_place_ships(self.game.game_id, process_ships)
 
     def check_ships(self):
         msg = {}
@@ -438,14 +370,72 @@ class MainApplication(tk.Tk):
                 return
         return msg
 
+    def process_incoming(self):
+        while self.queue.qsize():
+            try:
+                msg = self.queue.get(0).split(cm.MSG_FIELD_SEP)
+                if self.state == "NO_NICK":
+                    if msg[0] != cm.RSP_OK:
+                        tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
+                        self.choose_nickname()
+                    else:
+                        self.nickname = msg[1]
+                        self.c.query_games()
+                        self.state = "NO_GAMES"
+                elif self.state == "NO_GAMES":
+                    if msg[0] == cm.RSP_OK:
+                        self.games = eval(msg[1])
+                        self.choose_game()
+                        self.state = "NO_YOUR_GAME"
+                    else:
+                        print("Didn't get response from server about games.")
+                elif self.state == "NO_YOUR_GAME":
+                    if msg[0] == cm.RSP_OK:
+                        self.choose_grid.destroy()
+                        self.state = "NO_SHIPS"
+                        self.init_board(msg[1], self.nickname)
+                        self.choose_ships()
+                    else:
+                        print("Couldn't choose your game. ")
+                        tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
+                        self.state = "NO_GAMES"
+                        self.choose_game()
+                elif self.state == "NO_JOIN":
+                    if msg[0] == cm.RSP_OK:
+                        self.state = "NO_SHIPS"
+                        msg[1] = eval(msg[1])
+                        self.size = int(msg[1][0])
+                        self.init_board(self.games[self.joining_game_id], msg[1][1])
+                        self.choose_ships()
+                    else:
+                        tkMessageBox.showwarning("Didn't get grid size from server.")
+                        self.state = "NO_GAMES"
+                        self.choose_game()
+                elif self.state == "NO_SHIPS":
+                    if msg[0] == cm.RSP_OK:
+                        self.ships = {}
+                        self.ships = json.loads(msg[1])
+                        self.show_grids()
+                    else:
+                        print("Didn't position ships.")
+                        self.state = "NO_YOUR_GAME"
+                        self.choose_ships()
+                elif self.state == "NO_START_GAME":
+                    if msg[0] == cm.RSP_MULTI_OK:
+                        self.change_names(eval(msg[1]))
+                        self.state = "START_GAME"
+                        if self.game.master == self.nickname:
+                            self.shooting_frame(eval(msg[1]))
+                    else:
+                        print("Something went wrong from getting opponents names.")
+
+            except Queue.Empty:
+                pass
 
 if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
-    # Close socket when client closes window
-    app.c.sock.close()
 
-# root = tk.Tk()
-# MainApplication(root).pack(side="top", fill="both", expand=False)
-# win = MainApplication(root)
-# root.mainloop()
+    # Close socket when client closes window
+    # app.c.sock.close()
+

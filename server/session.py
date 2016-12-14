@@ -25,7 +25,7 @@ class Session:
             return cm.RSP_NICK_EXISTS
         else:
             self.clients[client.nick] = client
-            return cm.RSP_OK
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client.nick])
 
     def new_game(self, size, master):
         if size < 5 or size > 15:
@@ -105,7 +105,7 @@ class Session:
         elif req == cm.QUERY_PLACE_SHIPS:
             resp = self.games[extra[0]].place_ships(client_nick=client.nick, ships=extra[1])
             if resp:
-                return cm.RSP_OK
+                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, extra[1]])
             else:
                 return cm.RSP_SHIPS_PLACEMENT
 
