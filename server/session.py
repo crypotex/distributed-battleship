@@ -72,7 +72,7 @@ class Session:
         if game.check_client_turn(enc_dic["nick"]):
             resp = game.shoot_bombs(enc_dic['shots_fired'])
             if resp:
-                return cm.MSG_FIELD_SEP([cm.RSP_MULTI_OK, resp, nicks])
+                return cm.MSG_FIELD_SEP.join([cm.RSP_MULTI_OK, resp, nicks])
             else:
                 return cm.RSP_INVALID_SHOT
         else:
