@@ -158,7 +158,7 @@ class Comm:
         self.sock.settimeout(5)
         try:
             msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-            if msg[0] == cm.RSP_OK:
+            if msg[0] == cm.RSP_MULTI_OK:
                 return True, json.loads(msg[1], encoding='utf-8')
         except timeout:
             msg = False
@@ -167,10 +167,12 @@ class Comm:
     def listen_start_game(self):
         self.sock.settimeout(5)
         try:
-            response = self.sock.recv(1024)
+            msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+            if msg[0] == cm.RSP_MULTI_OK:
+                return True
         except timeout:
-            response = False
-        return response
+            msg = False
+        return msg
 
     def something(self):
         pass
