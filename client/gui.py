@@ -203,6 +203,7 @@ class MainApplication(tk.Tk):
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
         else:
+            self.update()
             while True:
                 resp = self.c.listen_start_game()
                 if resp:
@@ -218,8 +219,19 @@ class MainApplication(tk.Tk):
             while True:
                 resp = self.c.listen_shots_fired()
                 if resp:
-                    print resp
-                    break
+                    if self.update_grids(resp[1]):
+                        break
+
+    def update_grids(self,msg):
+        print msg
+        free_me = False
+        if msg['next'] == self.nickname:
+            free_me = True
+            shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
+                                     padx=30, pady=10)
+            shoot_button.grid(row=8, columnspan=2)
+        self.update()
+        return free_me
 
     def start_game(self, start_button):
         start_button.destroy()
@@ -260,7 +272,8 @@ class MainApplication(tk.Tk):
         elif len(opponents) - 1 < 3:
             self.disable_grid(w3)
 
-        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
+        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
+                                 padx=30, pady=10)
         shoot_button.grid(row=8, columnspan=2)
 
         self.bind("<Return>", self.shoot)
@@ -269,7 +282,8 @@ class MainApplication(tk.Tk):
         for child in g.winfo_children():
             child.configure(state='disable')
 
-    def shoot(self, event):
+    def shoot(self, event, shoot_button):
+        shoot_button.destroy()
         coords = {self.opp1_grid.label.cget("text"): self.opp1_shoot.get()}
 
         if self.opp2_shoot.cget('state') != 'disabled':
