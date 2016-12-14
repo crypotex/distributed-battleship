@@ -138,7 +138,7 @@ class Comm:
             return False
 
     def query_shoot(self, positions):
-        # the positions should be list of tuples (pairs of coordinates)
+        # the positions should be dictionary nick: coordinate
         shooting_dump = json.dumps(positions, encoding='utf-8')
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHOOT, shooting_dump])
         self.sock.send(msg)
@@ -150,6 +150,16 @@ class Comm:
         else:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
+
+    def listen_shots_fired(self):
+        self.sock.settimeout(5)
+        try:
+            msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
+            if msg[0] == cm.RSP_OK:
+                return True, json.loads(msg[1], encoding='utf-8')
+        except timeout:
+            msg = False
+        return msg
 
     def listen_start_game(self):
         self.sock.settimeout(5)
