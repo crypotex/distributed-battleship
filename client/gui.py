@@ -177,7 +177,6 @@ class MainApplication(tk.Tk):
 
         self.my_grid = GridFrame(master=self, size=self.size, mine=True)
         self.my_grid.grid(row=1, column=0)
-        self.labels.append(self.my_grid.label)
         self.opp1_grid = GridFrame(master=self, size=self.size, mine=False)
         self.opp1_grid.grid(row=1, column=1)
         self.labels.append(self.opp1_grid.label)
@@ -246,8 +245,10 @@ class MainApplication(tk.Tk):
         elif len(opponents) - 1 < 3:
             self.disable_grid(w3)
 
-        shoot_button = tk.Button(self, text="Shoot", command=self.shoot, padx=30, pady=10)
+        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
         shoot_button.grid(row=8, columnspan=2)
+
+        self.bind("<Return>", self.shoot)
 
         # TODO: siin kutsuda v2lja meetod GameProtocolist
         # TODO: vaja kontrollida, mitu vastast on ja siis vastavalt vajadusele m6ned entry'id disable'ida
@@ -256,9 +257,8 @@ class MainApplication(tk.Tk):
         for child in g.winfo_children():
             child.configure(state='disable')
 
-    def shoot(self):
-        coords = {}
-        coords[self.opp1_grid.label.cget("text")] = self.opp1_shoot.get()
+    def shoot(self, event):
+        coords = {self.opp1_grid.label.cget("text"): self.opp1_shoot.get()}
 
         if self.opp2_shoot.cget('state') != 'disabled':
             coords[self.opp2_grid.label.cget("text")] = self.opp2_shoot.get()
@@ -274,9 +274,9 @@ class MainApplication(tk.Tk):
                 tkMessageBox.showwarning("Warning", "No such coordinate exists.")
                 return
 
+        print coords, self.nickname, self.game.game_id
         resp = self.c.query_shoot(coords, self.nickname, self.game.game_id)
         print resp
-
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
