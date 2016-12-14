@@ -159,15 +159,19 @@ class MainApplication(tk.Tk):
         title = tk.Label(self, text=str(name), font=("Helvetica", 16))
         title.grid(row=0, columnspan=2)
 
+        self.labels = []
+
         my_grid = tk.Label(self, text="My grid", font=("Helvetica", 12))
         my_grid.grid(row=1, column=0)
 
-        self.opp_label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12), pady=10)
-        self.opp_label.grid(row=1, column=1)
+        opp_label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12), pady=10)
+        opp_label.grid(row=1, column=1)
+        self.labels.append(opp_label)
 
         for j in range(2):
-            self.opp_label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12), pady=10)
-            self.opp_label.grid(row=4, column=j)
+            opp_label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12), pady=10)
+            opp_label.grid(row=4, column=j)
+            self.labels.append(opp_label)
 
         self.my_grid = Grid(self, self.size, mine=True)
         self.my_grid.grid(row=2, column=0)
@@ -188,10 +192,10 @@ class MainApplication(tk.Tk):
             ship_size = self.game.identifier.get(ship)[1]
             if value[2]:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[0], value[1]+i], fill="blue")
+                    self.my_grid.itemconfig(self.my_grid.rect[value[0], value[1] + i], fill="blue")
             else:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[0]+i, value[1]], fill="blue")
+                    self.my_grid.itemconfig(self.my_grid.rect[value[0] + i, value[1]], fill="blue")
 
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
@@ -204,7 +208,13 @@ class MainApplication(tk.Tk):
     def start_game(self, start_button):
         start_button.destroy()
 
-        opponents = self.c.query_start_game(self.game.game_id)
+        opponents = sorted(self.c.query_start_game(self.game.game_id))
+
+        j = 0
+        for i in range(len(opponents)):
+            if opponents[i] != self.nickname:
+                self.labels[j].config(text=opponents[i])
+                j += 1
 
         w1 = tk.Frame(self)
         shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
@@ -227,8 +237,21 @@ class MainApplication(tk.Tk):
         self.opp3_shoot.grid(row=0, column=1)
         w3.grid(row=7, column=1)
 
+        if len(opponents) - 1 < 2:
+            self.disable_grid(w2)
+            self.disable_grid(w3)
+        elif len(opponents) - 1 < 3:
+            self.disable_grid(w3)
+
+        shoot_button = tk.Button(self, text="Shoot", padx=30, pady=10)
+        shoot_button.grid(row=8, columnspan=2)
+
         # TODO: siin kutsuda v2lja meetod GameProtocolist
         # TODO: vaja kontrollida, mitu vastast on ja siis vastavalt vajadusele m6ned entry'id disable'ida
+
+    def disable_grid(self, g):
+        for child in g.winfo_children():
+            child.configure(state='disable')
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
