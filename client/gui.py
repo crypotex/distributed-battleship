@@ -202,6 +202,7 @@ class MainApplication(tk.Tk):
 
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
+
         else:
             self.update()
             while True:
@@ -222,11 +223,13 @@ class MainApplication(tk.Tk):
                     if self.update_grids(resp[1]):
                         break
 
-    def update_grids(self,msg):
+    def update_grids(self, msg):
         print msg
         free_me = False
+
         if msg['next'] == self.nickname:
             free_me = True
+            self.draw_gamefield(msg['shots_fired'].keys())
             shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
                                      padx=30, pady=10)
             shoot_button.grid(row=8, columnspan=2)
@@ -245,6 +248,15 @@ class MainApplication(tk.Tk):
                 self.labels[j].config(text=opponents[i])
                 j += 1
 
+        self.draw_gamefield(opponents)
+
+        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
+                                 padx=30, pady=10)
+        shoot_button.grid(row=8, columnspan=2)
+
+        self.bind("<Return>", self.shoot)
+
+    def draw_gamefield(self, opponents):
         w1 = tk.Frame(self)
         shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
         self.opp1_shoot = tk.Entry(w1, width=10)
@@ -271,12 +283,6 @@ class MainApplication(tk.Tk):
             self.disable_grid(w3)
         elif len(opponents) - 1 < 3:
             self.disable_grid(w3)
-
-        shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
-                                 padx=30, pady=10)
-        shoot_button.grid(row=8, columnspan=2)
-
-        self.bind("<Return>", self.shoot)
 
     def disable_grid(self, g):
         for child in g.winfo_children():
@@ -308,6 +314,12 @@ class MainApplication(tk.Tk):
         print coords, self.nickname, self.game.game_id
         resp = self.c.query_shoot(coords, self.nickname, self.game.game_id)
         print resp
+
+        while True:
+            resp = self.c.listen_shots_fired()
+            if resp:
+                if self.update_grids(resp[1]):
+                    break
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
