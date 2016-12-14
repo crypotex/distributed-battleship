@@ -147,7 +147,7 @@ class Comm:
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        if msg[0] == cm.RSP_OK:
+        if msg[0] == cm.RSP_MULTI_OK:
             LOG.info("Shot processed successfully.")
             return True
         else:
@@ -169,7 +169,8 @@ class Comm:
         try:
             msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
             if msg[0] == cm.RSP_MULTI_OK:
-                return True
+                LOG.info("Received game info that is being started by master.")
+                return json.loads(msg[1], encoding='utf-8')
         except timeout:
             msg = False
         return msg

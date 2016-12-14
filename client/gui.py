@@ -57,6 +57,7 @@ class Grid(tk.Canvas):
                 if self.mine:
                     self.itemconfig(self.rect[row, column], tags=self)
 
+
 class GridFrame(tk.Frame):
     def __init__(self, master, size, mine):
         tk.Frame.__init__(self, master=master)
@@ -205,12 +206,26 @@ class MainApplication(tk.Tk):
             while True:
                 resp = self.c.listen_start_game()
                 if resp:
+                    opponents = sorted(resp)
+                    print opponents
+
+                    j = 0
+                    for i in range(len(opponents)):
+                        if opponents[i] != self.nickname:
+                            self.labels[j].config(text=opponents[i])
+                            j += 1
+                    break
+            while True:
+                resp = self.c.listen_shots_fired()
+                if resp:
+                    print resp
                     break
 
     def start_game(self, start_button):
         start_button.destroy()
 
         opponents = sorted(self.c.query_start_game(self.game.game_id))
+        print opponents
 
         j = 0
         for i in range(len(opponents)):
@@ -250,9 +265,6 @@ class MainApplication(tk.Tk):
 
         self.bind("<Return>", self.shoot)
 
-        # TODO: siin kutsuda v2lja meetod GameProtocolist
-        # TODO: vaja kontrollida, mitu vastast on ja siis vastavalt vajadusele m6ned entry'id disable'ida
-
     def disable_grid(self, g):
         for child in g.winfo_children():
             child.configure(state='disable')
@@ -264,6 +276,11 @@ class MainApplication(tk.Tk):
             coords[self.opp2_grid.label.cget("text")] = self.opp2_shoot.get()
         if self.opp3_shoot.cget('state') != 'disabled':
             coords[self.opp3_grid.label.cget("text")] = self.opp3_shoot.get()
+
+        for key, val in coords.items():
+            if not val:
+                tkMessageBox.showwarning("Warning", "You have to fill all the fields.")
+                return
 
         for key, val in coords.items():
             parts = val.split(",")
