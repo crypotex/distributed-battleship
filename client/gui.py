@@ -232,40 +232,41 @@ class MainApplication(tk.Tk):
             if self.nickname == origin:
                 if self.opp1_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp1_grid)
-                    self.mark_lost_ships(lost_ships, self.opp1_grid)
                 if self.opp2_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp2_grid)
-                    self.mark_lost_ships(lost_ships, self.opp2_grid)
                 if self.opp3_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp3_grid)
-                    self.mark_lost_ships(lost_ships, self.opp3_grid)
             elif self.nickname == player and v[-1]:
                 self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
 
-            if self.opp1_grid.label.cget('text') == player:
-                self.mark_lost_ships(lost_ships, self.opp1_grid)
-            if self.opp2_grid.label.cget('text') == player:
-                self.mark_lost_ships(lost_ships, self.opp2_grid)
-            if self.opp3_grid.label.cget('text') == player:
-                self.mark_lost_ships(lost_ships, self.opp3_grid)
-
+        if lost_ships:
+            self.mark_lost_ships(lost_ships)
         self.update()
 
-    def mark_lost_ships(self, lost_ships, opp_grid):
-        if lost_ships:
-            for player, ship in lost_ships.items():
-                if self.nickname != player:
-                    ship_size = self.game.identifier.get(ship)[1]
-                    x = self.ships.get(ship)[0]
-                    y = self.ships.get(ship)[1]
-                    position = self.ships.get(ship)[-1]
+    def mark_lost_ships(self, lost_ships):
+        for player, ship in lost_ships.items():
+            if self.nickname != player:
+                ship_size = self.game.identifier.get(ship)[1]
+                x = self.ships.get(ship)[0]
+                y = self.ships.get(ship)[1]
+                direction = self.ships.get(ship)[-1]
 
-                    if position:
-                        for i in range(ship_size):
-                            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[x, y + i], fill="red")
-                    else:
-                        for i in range(ship_size):
-                            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[x + i, y], fill="red")
+                if direction:
+                    for i in range(ship_size):
+                        if self.opp1_grid.label.cget('text') == player:
+                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x, y + i], fill="red")
+                        elif self.opp2_grid.label.cget('text') == player:
+                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x, y + i], fill="red")
+                        elif self.opp3_grid.label.cget('text') == player:
+                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x, y + i], fill="red")
+                else:
+                    for i in range(ship_size):
+                        if self.opp1_grid.label.cget('text') == player:
+                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x + i, y], fill="red")
+                        elif self.opp2_grid.label.cget('text') == player:
+                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x + i, y], fill="red")
+                        elif self.opp3_grid.label.cget('text') == player:
+                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="red")
 
     def mark_hit_or_miss(self, v, opp_grid):
         if not v[-1]:
