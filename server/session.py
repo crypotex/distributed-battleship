@@ -69,7 +69,7 @@ class Session:
         enc_dic = json.loads(json_dic, encoding='utf-8')
         game = self.games[enc_dic["game_id"]]
         nicks = game.get_nicks()
-        if game.check_client_turn(enc_dic["client"]):
+        if game.check_client_turn(enc_dic["nick"]):
             resp = game.shoot_bombs(enc_dic['shots_fired'])
             if resp:
                 return cm.MSG_FIELD_SEP([cm.RSP_MULTI_OK, resp, nicks])
