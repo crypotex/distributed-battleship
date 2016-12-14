@@ -137,9 +137,12 @@ class Comm:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
 
-    def query_shoot(self, positions):
+    def query_shoot(self, positions, nick, game_id):
         # the positions should be dictionary nick: coordinate
-        shooting_dump = json.dumps(positions, encoding='utf-8')
+        result = {"nick": nick,
+                  "shots_fired": positions,
+                  "game_id": game_id}
+        shooting_dump = json.dumps(result, encoding="utf-8")
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHOOT, shooting_dump])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
