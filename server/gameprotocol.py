@@ -1,10 +1,13 @@
 import json
+from itertools import chain
 
 __author__ = "Andre"
 
 
 class GameProtocol:
-    identifier = {"Carrier": (1, 5), "Battleship": (2, 4), "Cruiser": (3, 3), "Submarine": (4, 3), "Destroyer": (5, 2)}
+    identifier = {"Carrier": (5, 5), "Battleship": (6, 4), "Cruiser": (7, 3), "Submarine": (8, 3), "Destroyer": (9, 2)}
+    im_hit_im_hit = 1
+    i_missed = 2
 
     def __init__(self, game_id, size, master):
         # Master is a client nick
@@ -17,6 +20,7 @@ class GameProtocol:
         self.game_started = False
         self.turn_list = [master]
         self.current_turn = 0
+        self.lost_list = []
 
     def user_join_game(self, client):
         if client in self.table:
@@ -80,18 +84,22 @@ class GameProtocol:
     def shoot_bombs(self, info):
         shooting_gallery = {}
         for nick in info:
-            t_x, t_y = info[nick][0], info[nick][1]
-            if self.validate_coord(t_x, t_y):
-                print
-                if self.table[nick][t_x][t_y] > 0:
-                    shooting_gallery[nick] = (t_x, t_y, True)
-
-                    # TODO: Add sinking checks here
-                else:
-                    shooting_gallery[nick] = (t_x, t_y, False)
+            if nick in self.lost_list:
+                shooting_gallery[nick] = ("He dead", )
             else:
-                return False
-        # TODO: Add win/lose checks here
+                t_x, t_y = info[nick][0], info[nick][1]
+                if self.validate_coord(t_x, t_y):
+                    print
+                    if self.table[nick][t_x][t_y] > 0:
+                        shooting_gallery[nick] = (t_x, t_y, True)
+                        self.table[nick][t_x][t_y] = self.im_hit_im_hit
+                        if all(i < 4 for i in chain(*self.table[nick])):
+                            self.lost_list.append(nick)
+                    else:
+                        shooting_gallery[nick] = (t_x, t_y, False)
+                        self.table[nick][t_x][t_y] = self.i_missed
+                else:
+                    return False
 
         if self.current_turn == len(self.turn_list) - 1:
             self.current_turn = 0
@@ -100,6 +108,7 @@ class GameProtocol:
             self.current_turn += 1
             next_player = self.turn_list[self.current_turn]
         result = {"next": next_player,
+                  "lost": self.lost_list,
                   "shots_fired": shooting_gallery}
         return json.dumps(result, encoding="utf-8")
 
