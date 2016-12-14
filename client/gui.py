@@ -23,7 +23,7 @@ class Grid(tk.Canvas):
         elif size <= 13:
             self.grid_size = int(size) * 30 + 5
         else:
-            self.grid_size = int(size) * 28 + 10  # vv6ib veel muuta, et paremini oleks jaotatud
+            self.grid_size = int(size) * 28 + 10
         self.rows = int(size)
         self.columns = int(size)
         self.cellheight = 25
@@ -31,6 +31,7 @@ class Grid(tk.Canvas):
         self.rect = {}
         self.config(height=self.grid_size, width=self.grid_size)
         self.mine = mine
+        self.player = ""
 
         self.make_grid()
 
@@ -53,10 +54,23 @@ class Grid(tk.Canvas):
                 y2 = y1 + self.cellheight
                 self.rect[row, column] = self.create_rectangle(x1, y1, x2, y2)
 
-                # self.tag_bind(self.rect[row, column], '<Double-1>', onObjectClick)
-
                 if self.mine:
                     self.itemconfig(self.rect[row, column], tags=self)
+
+class GridFrame(tk.Frame):
+    def __init__(self, master, size, mine):
+        tk.Frame.__init__(self, master=master)
+
+        self.master = master
+        self.gridp = Grid(self, size, mine=mine)
+
+        if mine:
+            self.label = tk.Label(self, text="My grid", font=("Helvetica", 12))
+        else:
+            self.label = tk.Label(self, text="Opponent", font=("Helvetica", 12))
+
+        self.label.grid(row=0, column=0)
+        self.gridp.grid(row=1, column=0)
 
 
 class MainApplication(tk.Tk):
@@ -161,29 +175,18 @@ class MainApplication(tk.Tk):
 
         self.labels = []
 
-        my_grid = tk.Label(self, text="My grid", font=("Helvetica", 12))
-        my_grid.grid(row=1, column=0)
-
-        opp_label = tk.Label(self, text="Opponent 1", font=("Helvetica", 12), pady=10)
-        opp_label.grid(row=1, column=1)
-        self.labels.append(opp_label)
-
-        for j in range(2):
-            opp_label = tk.Label(self, text="Opponent " + str(j + 2), font=("Helvetica", 12), pady=10)
-            opp_label.grid(row=4, column=j)
-            self.labels.append(opp_label)
-
-        self.my_grid = Grid(self, self.size, mine=True)
-        self.my_grid.grid(row=2, column=0)
-
-        self.opp1_grid = Grid(self, self.size)
-        self.opp1_grid.grid(row=2, column=1)
-
-        self.opp2_grid = Grid(self, self.size)
-        self.opp2_grid.grid(row=5, column=0)
-
-        self.opp3_grid = Grid(self, self.size)
-        self.opp3_grid.grid(row=5, column=1)
+        self.my_grid = GridFrame(master=self, size=self.size, mine=True)
+        self.my_grid.grid(row=1, column=0)
+        self.labels.append(self.my_grid.label)
+        self.opp1_grid = GridFrame(master=self, size=self.size, mine=False)
+        self.opp1_grid.grid(row=1, column=1)
+        self.labels.append(self.opp1_grid.label)
+        self.opp2_grid = GridFrame(master=self, size=self.size, mine=False)
+        self.opp2_grid.grid(row=3, column=0)
+        self.labels.append(self.opp2_grid.label)
+        self.opp3_grid = GridFrame(master=self, size=self.size, mine=False)
+        self.opp3_grid.grid(row=3, column=1)
+        self.labels.append(self.opp3_grid.label)
 
         start_button = tk.Button(self, text="Start game", padx=10, pady=20,
                                  command=lambda: self.start_game(start_button))
@@ -192,10 +195,10 @@ class MainApplication(tk.Tk):
             ship_size = self.game.identifier.get(ship)[1]
             if value[2]:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[0], value[1] + i], fill="blue")
+                    self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0], value[1] + i], fill="blue")
             else:
                 for i in range(ship_size):
-                    self.my_grid.itemconfig(self.my_grid.rect[value[0] + i, value[1]], fill="blue")
+                    self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0] + i, value[1]], fill="blue")
 
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
@@ -221,21 +224,21 @@ class MainApplication(tk.Tk):
         self.opp1_shoot = tk.Entry(w1, width=10)
         shoot_opp1_label.grid(row=0, column=0)
         self.opp1_shoot.grid(row=0, column=1)
-        w1.grid(row=3, column=1)
+        w1.grid(row=2, column=1)
 
         w2 = tk.Frame(self)
         shoot_opp2_label = tk.Label(w2, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
         self.opp2_shoot = tk.Entry(w2, width=10)
         shoot_opp2_label.grid(row=0, column=0)
         self.opp2_shoot.grid(row=0, column=1)
-        w2.grid(row=7, column=0)
+        w2.grid(row=4, column=0)
 
         w3 = tk.Frame(self)
         shoot_opp3_label = tk.Label(w3, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
         self.opp3_shoot = tk.Entry(w3, width=10)
         shoot_opp3_label.grid(row=0, column=0)
         self.opp3_shoot.grid(row=0, column=1)
-        w3.grid(row=7, column=1)
+        w3.grid(row=4, column=1)
 
         if len(opponents) - 1 < 2:
             self.disable_grid(w2)
@@ -243,7 +246,7 @@ class MainApplication(tk.Tk):
         elif len(opponents) - 1 < 3:
             self.disable_grid(w3)
 
-        shoot_button = tk.Button(self, text="Shoot", padx=30, pady=10)
+        shoot_button = tk.Button(self, text="Shoot", command=self.shoot, padx=30, pady=10)
         shoot_button.grid(row=8, columnspan=2)
 
         # TODO: siin kutsuda v2lja meetod GameProtocolist
@@ -252,6 +255,33 @@ class MainApplication(tk.Tk):
     def disable_grid(self, g):
         for child in g.winfo_children():
             child.configure(state='disable')
+
+    def shoot(self):
+        coords = {}
+        coords[self.opp1_grid.label.cget("text")] = self.opp1_shoot.get()
+
+        if self.opp2_shoot.cget('state') != 'disabled':
+            coords[self.opp2_grid.label.cget("text")] = self.opp2_shoot.get()
+        if self.opp3_shoot.cget('state') != 'disabled':
+            coords[self.opp3_grid.label.cget("text")] = self.opp3_shoot.get()
+
+        for key, val in coords.items():
+            parts = val.split(",")
+            process_x = self.game._process_coords(parts[0].upper())
+            if process_x[0]:
+                coords[key] = (int(process_x[1]), int(parts[1]))
+            else:
+                tkMessageBox.showwarning("Warning", "No such coordinate exists.")
+                return
+
+        msg = {}
+        msg["nick"] = self.nickname
+        msg["shots_fired"] = coords
+        msg["game_id"] = self.game.game_id
+
+        resp = self.c.query_shoot(msg)
+        print resp
+
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -400,6 +430,8 @@ class MainApplication(tk.Tk):
 if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
+    # Close socket when client closes window
+    app.c.sock.close()
 
 # root = tk.Tk()
 # MainApplication(root).pack(side="top", fill="both", expand=False)
