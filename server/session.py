@@ -57,12 +57,26 @@ class Session:
     def start_game(self, game_id, client):
         if self.games[game_id].master == client:
             resp = self.games[game_id].start_game()
+            # Resp in here is just a punch of nicks
             if resp:
-                return cm.MSG_FIELD_SEP.join([cm.RSP_GAME_STARTED, resp])
+                return cm.MSG_FIELD_SEP.join([cm.RSP_MULTI_OK, resp])
             else:
                 return cm.RSP_SHIPS_NOT_PLACED
         else:
             return cm.RSP_NOT_MASTER
+
+    def shots_fired(self, json_dic):
+        enc_dic = json.loads(json_dic, encoding='utf-8')
+        game = self.games[enc_dic["game_id"]]
+        nicks = game.get_nicks()
+        if game.check_client_turn(enc_dic["client"]):
+            resp = game.shoot_bombs(enc_dic['shots_fired'])
+            if resp:
+                return cm.MSG_FIELD_SEP([cm.RSP_MULTI_OK, resp, nicks])
+            else:
+                return cm.RSP_INVALID_SHOT
+        else:
+            return cm.RSP_WAIT_YOUR_TURN
 
     def handle_request(self, msg, client):
         it = iter(msg.split(cm.MSG_FIELD_SEP))
@@ -97,6 +111,10 @@ class Session:
 
         elif req == cm.START_GAME:
             resp = self.start_game(game_id=extra[0], client=client.nick)
+            return resp
+
+        elif req == cm.QUERY_SHOOT:
+            resp = self.shots_fired(extra[0])
             return resp
 
 

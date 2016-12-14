@@ -76,11 +76,10 @@ class Server:
                 LOG.info("Got request with message: %s." % msg)
                 resp = self.session.handle_request(msg, client)
                 # This is just a fix for now
-                if resp[0] == cm.RSP_GAME_STARTED:
-                    flippidy = resp.split(cm.MSG_FIELD_SEP)[1]
-                    plappady = json.loads(flippidy, encoding='utf-8')
-                    print(plappady)
-                    for nick in plappady:
+                if resp.startswith(cm.RSP_MULTI_OK):
+                    nicks = resp.split(cm.MSG_FIELD_SEP)[-1]
+                    real_nicks = json.loads(nicks, encoding='utf-8')
+                    for nick in real_nicks:
                         self.session.clients[nick].socket.send(resp)
                         LOG.info("Multi-Response is: %s." % resp)
                 else:
