@@ -40,13 +40,12 @@ class GameProtocol:
 
                 if not self._process_ship(coords[0], coords[1], horizontal, ship):
                     print(ship)
+                    self.table[self.client_nick] = [[0 for _ in range(self.size)] for i in range(self.size)]
                     return False
                 else:
                     processed_ships[ship] = (coords[0], coords[1], horizontal)
             print self.table
             return processed_ships
-
-
 
     def _process_ship(self, x, y, horizontal, ship):
         # Direction on horisontaalne

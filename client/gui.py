@@ -340,6 +340,22 @@ class MainApplication(tk.Tk):
         self.bind("<Return>", self.send_ships)
 
     def send_ships(self, event):
+        msg = self.check_ships()
+        while not msg:
+            return
+
+        process_ships = self.game.place_ships(msg)
+        if not process_ships:
+            tkMessageBox.showwarning("Warning", "Ships didn't fit.")
+            return
+        else:
+            resp = self.c.query_place_ships(self.game.game_id, process_ships)
+            if resp:
+                self.ships = {}
+                self.ships = process_ships
+                self.show_grids()
+
+    def check_ships(self):
         msg = {}
         for ship, value in self.ships.items():
             if value[0].get() != "":
@@ -347,18 +363,7 @@ class MainApplication(tk.Tk):
             else:
                 tkMessageBox.showwarning("Warning", "Please enter all coordinates.")
                 return
-        process_ships = self.game.place_ships(msg)
-        if process_ships:
-            resp = self.c.query_place_ships(self.game.game_id, process_ships)
-            if resp:
-                self.ships = {}
-                self.ships = process_ships
-
-                self.show_grids()
-            else:
-                tkMessageBox.showwarning("Warning", "Something went wrong.")
-        else:
-            tkMessageBox.showwarning("Warning", "Choose your ships correctly.")
+        return msg
 
 
 if __name__ == "__main__":

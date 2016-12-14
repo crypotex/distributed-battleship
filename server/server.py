@@ -76,7 +76,7 @@ class Server:
                 LOG.info("Got request with message: %s." % msg)
                 resp = self.session.handle_request(msg, client)
                 # This is just a fix for now
-                if resp == cm.START_GAME[0]:
+                if resp[0] == cm.START_GAME:
                     flippidy = resp.split(cm.MSG_FIELD_SEP)[1]
                     plappady = json.loads(flippidy, encoding='utf-8')
                     print(plappady)

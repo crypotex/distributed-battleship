@@ -58,7 +58,7 @@ class Session:
         if self.games[game_id].master == client:
             resp = self.games[game_id].start_game()
             if resp:
-                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, resp])
+                return cm.MSG_FIELD_SEP.join([cm.START_GAME, resp])
             else:
                 return cm.RSP_SHIPS_NOT_PLACED
         else:
