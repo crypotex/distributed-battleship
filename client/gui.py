@@ -209,6 +209,7 @@ class MainApplication(tk.Tk):
                 resp = self.c.listen_start_game()
                 if resp:
                     opponents = sorted(resp)
+                    self.draw_gamefield(opponents)
 
                     j = 0
                     for i in range(len(opponents)):
@@ -227,11 +228,29 @@ class MainApplication(tk.Tk):
         origin = msg['origin']
 
         for player, v in shots.items():
-            if player == self.nickname and v[-1]:
+            if self.nickname == origin:
+                if self.opp1_grid.label.cget('text') == player:
+                    if not v[-1]:
+                        self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+                    else:
+                        self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[v[0], v[1]], fill="red")
+
+                if self.opp2_grid.label.cget('text') == player:
+                    if not v[-1]:
+                        self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+                    else:
+                        self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[v[0], v[1]], fill="red")
+
+                if self.opp3_grid.label.cget('text') == player:
+                    if not v[-1]:
+                        self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+                    else:
+                        self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[v[0], v[1]], fill="red")
+            elif self.nickname == player and v[-1]:
                 self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
 
-        # TODO: kui shoot'id m88da, siis oponendi kast muud v2rvi
-        # TODO: kui shoot'id kedagi ja saad pihta, siis oponendi grid'is kast punaseks
+        # TODO: kui ship p6hja l2heb siis k6ik n2evad
+        self.update()
 
     def update_grids(self, msg):
         print msg
@@ -240,7 +259,6 @@ class MainApplication(tk.Tk):
 
         if msg['next'] == self.nickname:
             free_me = True
-            self.draw_gamefield(msg['shots_fired'].keys())
             shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None, shoot_button),
                                      padx=30, pady=10)
             shoot_button.grid(row=8, columnspan=2)
@@ -299,7 +317,6 @@ class MainApplication(tk.Tk):
             child.configure(state='disable')
 
     def shoot(self, event, shoot_button):
-        shoot_button.destroy()
         coords = {self.opp1_grid.label.cget("text"): self.opp1_shoot.get()}
 
         if self.opp2_shoot.cget('state') != 'disabled':
@@ -321,9 +338,10 @@ class MainApplication(tk.Tk):
                 tkMessageBox.showwarning("Warning", "No such coordinate exists.")
                 return
 
-        print coords, self.nickname, self.game.game_id
         resp = self.c.query_shoot(coords, self.nickname, self.game.game_id)
         print resp
+        self.mark_shots(resp)
+        shoot_button.destroy()
 
         while True:
             resp = self.c.listen_shots_fired()
