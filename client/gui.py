@@ -205,12 +205,21 @@ class MainApplication(tk.Tk):
             while True:
                 resp = self.c.listen_start_game()
                 if resp:
+                    opponents = sorted(resp)
+                    print opponents
+
+                    j = 0
+                    for i in range(len(opponents)):
+                        if opponents[i] != self.nickname:
+                            self.labels[j].config(text=opponents[i])
+                            j += 1
                     break
 
     def start_game(self, start_button):
         start_button.destroy()
 
         opponents = sorted(self.c.query_start_game(self.game.game_id))
+        print opponents
 
         j = 0
         for i in range(len(opponents)):
@@ -249,9 +258,6 @@ class MainApplication(tk.Tk):
         shoot_button.grid(row=8, columnspan=2)
 
         self.bind("<Return>", self.shoot)
-
-        # TODO: siin kutsuda v2lja meetod GameProtocolist
-        # TODO: vaja kontrollida, mitu vastast on ja siis vastavalt vajadusele m6ned entry'id disable'ida
 
     def disable_grid(self, g):
         for child in g.winfo_children():
