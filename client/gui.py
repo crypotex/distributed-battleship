@@ -2,6 +2,7 @@ import Tkinter as tk
 import ttk
 import tkMessageBox
 import operator
+import select
 
 from client_comms import Comm
 from client_comms import DEFAULT_SERVER_PORT
@@ -181,10 +182,7 @@ class MainApplication(tk.Tk):
         self.opp3_grid.grid(row=5, column=1)
 
         start_button = tk.Button(self, text="Start game", padx=10, pady=20,
-                                 command=lambda: self.start_game(start_button, name))
-
-        if self.nickname == self.game.master:
-            start_button.grid(row=6, columnspan=2)
+                                 command=lambda: self.start_game(start_button))
 
         for ship, value in self.ships.items():
             ship_size = self.game.identifier.get(ship)[1]
@@ -195,8 +193,18 @@ class MainApplication(tk.Tk):
                 for i in range(ship_size):
                     self.my_grid.itemconfig(self.my_grid.rect[value[0]+i, value[1]], fill="blue")
 
+        if self.nickname == self.game.master:
+            start_button.grid(row=6, columnspan=2)
+        else:
+            while True:
+                resp = self.c.listen_start_game()
+                if resp:
+                    break
+
     def start_game(self, start_button):
         start_button.destroy()
+
+        opponents = self.c.query_start_game(self.game.game_id)
 
         w1 = tk.Frame(self)
         shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)

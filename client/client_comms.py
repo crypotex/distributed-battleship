@@ -1,8 +1,8 @@
 import os
 import sys
-
 import logging
-from socket import AF_INET, SOCK_STREAM, socket
+from socket import AF_INET, SOCK_STREAM, socket, timeout
+
 try:
     import common as cm
 except ImportError:
@@ -152,7 +152,11 @@ class Comm:
             return False
 
     def listen_start_game(self):
-        response = self.sock.recv(1024)
+        self.sock.settimeout(5)
+        try:
+            response = self.sock.recv(1024)
+        except timeout:
+            response = False
         return response
 
     def something(self):
