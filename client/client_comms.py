@@ -149,7 +149,7 @@ class Comm:
         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
         if msg[0] == cm.RSP_MULTI_OK:
             LOG.info("Shot processed successfully.")
-            return msg[1]
+            return json.loads(msg[1], encoding='utf-8')
         else:
             LOG.error(cm.ERR_MSGS[msg[0]])
             return False
