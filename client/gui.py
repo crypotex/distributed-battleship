@@ -167,24 +167,24 @@ class MainApplication(tk.Tk):
 
     def shooting_frame(self, opponents):
         w1 = tk.Frame(self)
-        shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
-        self.opp1_shoot = tk.Entry(w1, width=10)
+        shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 11), padx=10)
+        self.opp1_shoot = tk.Entry(w1, width=17)
         shoot_opp1_label.grid(row=0, column=0)
-        self.opp1_shoot.grid(row=0, column=1)
+        self.opp1_shoot.grid(row=1, column=0)
         w1.grid(row=2, column=1)
 
         w2 = tk.Frame(self)
-        shoot_opp2_label = tk.Label(w2, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
-        self.opp2_shoot = tk.Entry(w2, width=10)
+        shoot_opp2_label = tk.Label(w2, text="Coordinates (A,0)", font=("Helvetica", 11), padx=10)
+        self.opp2_shoot = tk.Entry(w2, width=17)
         shoot_opp2_label.grid(row=0, column=0)
-        self.opp2_shoot.grid(row=0, column=1)
+        self.opp2_shoot.grid(row=1, column=0)
         w2.grid(row=4, column=0)
 
         w3 = tk.Frame(self)
-        shoot_opp3_label = tk.Label(w3, text="Coordinates (A,0)", font=("Helvetica", 12), padx=10)
-        self.opp3_shoot = tk.Entry(w3, width=10)
+        shoot_opp3_label = tk.Label(w3, text="Coordinates (A,0)", font=("Helvetica", 11), padx=10)
+        self.opp3_shoot = tk.Entry(w3, width=17)
         shoot_opp3_label.grid(row=0, column=0)
-        self.opp3_shoot.grid(row=0, column=1)
+        self.opp3_shoot.grid(row=1, column=0)
         w3.grid(row=4, column=1)
 
         if len(opponents) - 1 < 2:
@@ -195,6 +195,7 @@ class MainApplication(tk.Tk):
 
         self.shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
         self.shoot_button.grid(row=8, columnspan=2)
+        self.shoot_button.grid(row=7, columnspan=2, pady=(15, 0))
 
         self.bind("<Return>", self.shoot)
 
@@ -248,11 +249,10 @@ class MainApplication(tk.Tk):
                     self.mark_hit_or_miss(v, self.opp3_grid)
             elif self.nickname == player and v[-1]:
                 self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="firebrick")
-
                 self.shooter = tk.Label(self, text="You got hit by %s!" % origin, fg="firebrick",
                                         font=("Helvetica", 14, "bold"), padx=10, pady=10)
                 self.shooter.grid(row=9, columnspan=4)
-                self.shooter.after(4000, self.shooter.destroy)
+                self.shooter.after(3500, self.shooter.destroy)
 
             if lost_ships:
                 self.mark_lost_ships(lost_ships)
@@ -305,8 +305,6 @@ class MainApplication(tk.Tk):
         self.choose_nickname()
 
     def callback_nickname(self, event, nickname):
-        if not nickname:
-            tkMessageBox.showwarning("Warning", "Please choose a nickname to proceed!")
         if len(nickname) < 4 or len(nickname) > 28:
             tkMessageBox.showwarning("Warning", "Length should be between 4-28.")
         if "$" in nickname:
