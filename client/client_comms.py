@@ -23,7 +23,7 @@ Authors: Andre & Sander
 """
 
 DEFAULT_SERVER_INET_ADDR = '127.0.0.1'
-DEFAULT_SERVER_PORT = 49996
+DEFAULT_SERVER_PORT = 49997
 DEFAULT_BUFFER_SIZE = 1024 * 1024
 
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'

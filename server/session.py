@@ -48,9 +48,10 @@ class Session:
                 # TODO: Client diconnect handling here maybe ?
                 resp = self.games[game_id].user_join_game(client)
                 if resp:
-                    jresp = json.dumps(resp)
-                    resp = json.loads(jresp["result"])
-                    nicks = json.loads(jresp["nicks"])
+                    jresp = json.loads(resp, encoding='utf-8')
+                    print(jresp)
+                    resp = json.dumps(jresp["result"])
+                    nicks = json.dumps(jresp["nicks"])
                     return cm.MSG_FIELD_SEP.join([cm.RSP_MASTER_JOIN, resp, nicks])
                 else:
                     return cm.RSP_NOT_IMPLEMENTED_YET

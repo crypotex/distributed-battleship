@@ -464,12 +464,12 @@ class MainApplication(tk.Tk):
                 elif self.state == "NO_SHIPS":
                     if msg[0] == cm.RSP_OK:
                         self.ships = {}
-                        self.ships = json.loads(msg[1][0])
+                        self.ships = json.loads(msg[1])
                         self.show_grids()
                     elif msg[0] == cm.RSP_MASTER_JOIN:
                         print "Somebody joined, WOHOOO"
                         data = json.loads(msg[1])
-                        if data[0]["master"] == self.nickname:
+                        if data["master"] == self.nickname:
                             print "Vaheta nimi ara 2222"
                             self.change_names(json.loads(msg[2]))
                         else:
@@ -514,9 +514,11 @@ class MainApplication(tk.Tk):
                 pass
 
 
+
 if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
+
 
     # Close socket when client closes window
     # app.c.sock.close()
