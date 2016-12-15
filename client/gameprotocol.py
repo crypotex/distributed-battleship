@@ -25,7 +25,10 @@ class GameProtocol:
         else:
             for ship, params in ships.items():
                 coords = params[0].split(",")
-                coords[1] = int(coords[1])
+                try:
+                    coords[1] = int(coords[1])
+                except ValueError:
+                    return False
                 processing = self._process_coords(coords[0])
                 if processing[0]:
                     coords[0] = processing[1]

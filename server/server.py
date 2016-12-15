@@ -76,7 +76,7 @@ class Server:
                 LOG.info("Got request with message: %s." % msg)
                 resp = self.session.handle_request(msg, client)
                 # This is just a fix for now
-                if resp.startswith(cm.RSP_MULTI_OK):
+                if resp.startswith(cm.RSP_MULTI_OK) or resp.startswith(cm.RSP_MASTER_JOIN):
                     nicks = resp.split(cm.MSG_FIELD_SEP)[-1]
                     real_nicks = json.loads(nicks, encoding='utf-8')
                     for nick in real_nicks:

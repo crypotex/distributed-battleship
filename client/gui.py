@@ -449,6 +449,14 @@ class MainApplication(tk.Tk):
                         self.size = int(msg[1][0])
                         self.init_board(self.games[self.joining_game_id], msg[1][1])
                         self.choose_ships()
+                    elif msg[0] == cm.RSP_MASTER_JOIN:
+                        print "Liitusin siiiin"
+                        self.state = "NO_SHIPS"
+                        data = json.loads(msg[1])
+                        print data
+                        self.size = int(data["size"])
+                        self.init_board(self.games[self.joining_game_id], data["master"])
+                        self.choose_ships()
                     else:
                         tkMessageBox.showwarning("Didn't get grid size from server.")
                         self.state = "NO_GAMES"
@@ -456,8 +464,17 @@ class MainApplication(tk.Tk):
                 elif self.state == "NO_SHIPS":
                     if msg[0] == cm.RSP_OK:
                         self.ships = {}
-                        self.ships = json.loads(msg[1])
+                        self.ships = json.loads(msg[1][0])
                         self.show_grids()
+                    elif msg[0] == cm.RSP_MASTER_JOIN:
+                        print "Somebody joined, WOHOOO"
+                        data = json.loads(msg[1])
+                        if data[0]["master"] == self.nickname:
+                            print "Vaheta nimi ara 2222"
+                            self.change_names(json.loads(msg[2]))
+                        else:
+                            self.state = "NO_START_GAME"
+                            self.choose_ships()
                     else:
                         print("Didn't position ships.")
                         self.state = "NO_YOUR_GAME"
@@ -469,6 +486,14 @@ class MainApplication(tk.Tk):
                         self.state = "START_GAME"
                         if self.game.master == self.nickname:
                             self.shooting_frame(self.opponents)
+                    elif msg[0] == cm.RSP_MASTER_JOIN:
+                        print "Somebody joined when I was already wanting to start"
+                        resp = json.loads(msg[1])
+                        if resp["master"] == self.nickname:
+                            print "Vaheta nimi ara."
+                        else:
+                            self.state = "NO_YOUR_GAME"
+                            self.choose_ships()
                     else:
                         tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
                         self.show_grids()
@@ -488,14 +513,23 @@ class MainApplication(tk.Tk):
             except Queue.Empty:
                 pass
 
+
 if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
 
     # Close socket when client closes window
     # app.c.sock.close()
+    # TODO: close the script somehow?
 
-# TODO: don't reload nickname screen all the time when nickname exists or whatever
-# TODO: if you get a hit, you can keep shooting at that player's ships
-# TODO: cannot start game before at least one opponent
+# TODO: if you get a hit, you can keep shooting at that player's ships - server-side
 # TODO: show opponent's name/notify master when somebody joins game
+# TODO: master cannot start game before all the opponents have placed ships
+# TODO: show who hit you when hit
+# TODO: if any ships sinking, all should see
+# TODO: whn you lost -> possibility to leave OR possibility for spectator mode
+# TODO: if master leaves, random new master
+# TODO: if only one player and he leaves, delete the game
+# TODO: if you leave (cancel the main gui window), remove your ships from the game
+# TODO: games page reloads after entering wrong grid size - maybe fix?
+# TODO: fix color code (mark_lost_ships)
