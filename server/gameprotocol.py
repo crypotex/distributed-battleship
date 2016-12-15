@@ -86,6 +86,7 @@ class GameProtocol:
         shooting_gallery = {}
         origin = self.turn_list[self.current_turn]
         she_dead = {}
+        he_hit = {}
         for nick in info:
             if nick in self.lost_list:
                 shooting_gallery[nick] = ("He dead", )
@@ -97,6 +98,7 @@ class GameProtocol:
                         shooting_gallery[nick] = (t_x, t_y, True)
                         ship_id = self.table[nick][t_x][t_y]
                         self.table[nick][t_x][t_y] = self.im_hit_im_hit
+                        he_hit[nick] = True
                         if all(i != ship_id for i in chain(*self.table[nick])):
                             she_dead[nick] = self.reverse_identifier[ship_id]
                             if all(i < 4 for i in chain(*self.table[nick])):
@@ -109,6 +111,8 @@ class GameProtocol:
 
         if self.current_turn == len(self.turn_list) - 1:
             self.current_turn = 0
+            next_player = self.turn_list[self.current_turn]
+        elif len(he_hit)>0:
             next_player = self.turn_list[self.current_turn]
         else:
             self.current_turn += 1
