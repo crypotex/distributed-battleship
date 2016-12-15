@@ -155,7 +155,7 @@ class MainApplication(tk.Tk):
 
     def start_game(self, start_button):
         start_button.destroy()
-        self.c.query_start_game(self.game.game_id)
+        self.c.query_start_game(self.game.game_id, self.nickname)
 
     def change_names(self, opponents):
         j = 0
@@ -299,7 +299,7 @@ class MainApplication(tk.Tk):
 
     def callback_server(self, event):
         host = self.servers[self.v.get()]
-        self.c.connect_to_server(host, DEFAULT_SERVER_PORT)
+        self.c.connect_to_server(host)
         self.state = "NO_NICK"
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
@@ -346,7 +346,7 @@ class MainApplication(tk.Tk):
         if self.size and self.size.isdigit():
             self.size = int(self.size)
             self.state = "NO_YOUR_GAME"
-            self.c.create_game(self.size)
+            self.c.create_game(self.nickname, self.size)
 
             self.create_grids()
         else:
@@ -405,7 +405,7 @@ class MainApplication(tk.Tk):
             tkMessageBox.showwarning("Warning", "Ships didn't fit.")
             return
         else:
-            self.c.query_place_ships(self.game.game_id, process_ships)
+            self.c.query_place_ships(self.nickname, self.game.game_id, process_ships)
 
     def check_ships(self):
         msg = {}
@@ -439,7 +439,7 @@ class MainApplication(tk.Tk):
                         tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
                     else:
                         self.nickname = msg[1]
-                        self.c.query_games()
+                        self.c.query_games(self.nickname)
                         self.state = "NO_GAMES"
                 elif self.state == "NO_GAMES":
                     if msg[0] == cm.RSP_OK:

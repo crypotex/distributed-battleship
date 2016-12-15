@@ -21,11 +21,11 @@ class Session:
         self.games = {}
 
     def new_client(self, client):
-        if client.nick in self.clients:
+        if client in self.clients:
             return cm.RSP_NICK_EXISTS
         else:
-            self.clients[client.nick] = client
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client.nick])
+            self.clients[client] = client
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client])
 
     def new_game(self, size, master):
         if size < 5 or size > 15:
@@ -82,13 +82,14 @@ class Session:
         else:
             return cm.RSP_WAIT_YOUR_TURN
 
-    def handle_request(self, msg, client):
+    def handle_request(self, msg):
         it = iter(msg.split(cm.MSG_FIELD_SEP))
         req = it.next()
+        client = it.next()
         extra = list(it)
 
         if req == cm.QUERY_NICK:
-            if client.update_nick(extra[0]):
+            if nick_ok(client):
                 resp = self.new_client(client)
                 return resp
             else:
@@ -99,22 +100,22 @@ class Session:
             return cm.MSG_FIELD_SEP.join([cm.RSP_OK, games])
 
         elif req == cm.QUERY_NEW_GAME:
-            resp = self.new_game(size=int(extra[0]), master=client.nick)
+            resp = self.new_game(size=int(extra[0]), master=client)
             return resp
 
         elif req == cm.QUERY_JOIN_GAME:
-            resp = self.join_game(game_id=extra[0], client=client.nick)
+            resp = self.join_game(game_id=extra[0], client=client)
             return resp
 
         elif req == cm.QUERY_PLACE_SHIPS:
-            resp = self.games[extra[0]].place_ships(client_nick=client.nick, ships=extra[1])
+            resp = self.games[extra[0]].place_ships(client_nick=client, ships=extra[1])
             if resp:
                 return cm.MSG_FIELD_SEP.join([cm.RSP_OK, extra[1]])
             else:
                 return cm.RSP_SHIPS_PLACEMENT
 
         elif req == cm.START_GAME:
-            resp = self.start_game(game_id=extra[0], client=client.nick)
+            resp = self.start_game(game_id=extra[0], client=client)
             return resp
 
         elif req == cm.QUERY_SHOOT:
@@ -125,3 +126,9 @@ class Session:
         else:
             print("No mans land")
             return cm.RSP_NOT_IMPLEMENTED_YET
+
+def nick_ok(nick):
+    if len(nick) < 4 or len(nick) > 28:
+        return False
+    else:
+        return True
