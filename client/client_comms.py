@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import threading
-from socket import AF_INET, SOCK_STREAM, socket
+from socket import AF_INET, SOCK_STREAM, socket, timeout
 
 try:
     import common as cm
@@ -36,7 +36,7 @@ class Comm:
         LOG.info("Client started.")
         self.queue = queue
         self.gui = master
-        self.running = 1
+        self.running = True
 
         self.thread1 = threading.Thread(target=self.worker_thread)
 
@@ -49,6 +49,12 @@ class Comm:
         LOG.info("Socket initialized.")
         self.thread1.start()
         self.periodic_call()
+        # Test different timeouts here... maybe
+        self.sock.settimeout(1.0)
+
+    def stop_the_thread_please(self):
+        self.running = False
+        self.sock.close()
 
     def periodic_call(self):
         """
@@ -60,7 +66,8 @@ class Comm:
             # some cleanup before actually shutting it down.
             import sys
             sys.exit(1)
-        self.gui.after(100, self.periodic_call)
+        else:
+            self.gui.after(100, self.periodic_call)
 
     def worker_thread(self):
         """
@@ -69,9 +76,19 @@ class Comm:
         One important thing to remember is that the thread has to yield
         control.
         """
-        while self.running:
-            msg = self.sock.recv(DEFAULT_BUFFER_SIZE)
-            self.queue.put(msg)
+        try:
+            while self.running:
+                try:
+                    msg = self.sock.recv(DEFAULT_BUFFER_SIZE)
+                    self.queue.put(msg)
+                except timeout:
+                    # print("timeout")
+                    pass
+
+        except KeyboardInterrupt:
+            print("Exiting")
+            self.running = False
+
 
     def query_nick(self, nick):
         self.sock.send(cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick]))
