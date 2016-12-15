@@ -121,7 +121,7 @@ class GameProtocol:
         return json.dumps(result, encoding="utf-8")
 
     def validate_coord(self, x, y):
-        if x > -1 or x < self.size or y > -1 or y < self.size:
+        if 0 <= x < self.size and 0 <= y < self.size:
             return True
         else:
             return False
