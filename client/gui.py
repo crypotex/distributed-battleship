@@ -34,6 +34,8 @@ class MainApplication(tk.Tk):
         self.v = tk.IntVar()
         self.v2 = tk.IntVar()
 
+        self.opponents = []
+
         self.ships = {}
         self.servers = query_servers()
         self.choose_server()
@@ -124,19 +126,14 @@ class MainApplication(tk.Tk):
         title = tk.Label(self, text=str(name), font=("Helvetica", 16))
         title.grid(row=0, columnspan=2)
 
-        self.labels = []
+        self.create_grids()
+        if len(self.opponents) > 0:
+            self.change_names(self.opponents)
 
-        self.my_grid = grid.GridFrame(master=self, size=self.size, mine=True)
         self.my_grid.grid(row=1, column=0)
-        self.opp1_grid = grid.GridFrame(master=self, size=self.size, mine=False)
         self.opp1_grid.grid(row=1, column=1)
-        self.labels.append(self.opp1_grid.label)
-        self.opp2_grid = grid.GridFrame(master=self, size=self.size, mine=False)
         self.opp2_grid.grid(row=3, column=0)
-        self.labels.append(self.opp2_grid.label)
-        self.opp3_grid = grid.GridFrame(master=self, size=self.size, mine=False)
         self.opp3_grid.grid(row=3, column=1)
-        self.labels.append(self.opp3_grid.label)
 
         start_button = tk.Button(self, text="Start game", padx=10, pady=20,
                                  command=lambda: self.start_game(start_button))
@@ -165,6 +162,7 @@ class MainApplication(tk.Tk):
             if opponents[i] != self.nickname:
                 self.labels[j].config(text=opponents[i])
                 j += 1
+        self.update()
 
     def shooting_frame(self, opponents):
         w1 = tk.Frame(self)
@@ -243,40 +241,40 @@ class MainApplication(tk.Tk):
             if self.nickname == origin:
                 if self.opp1_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp1_grid)
-                    self.mark_lost_ships(lost_ships, self.opp1_grid)
                 if self.opp2_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp2_grid)
-                    self.mark_lost_ships(lost_ships, self.opp2_grid)
                 if self.opp3_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp3_grid)
-                    self.mark_lost_ships(lost_ships, self.opp3_grid)
             elif self.nickname == player and v[-1]:
                 self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
 
-            if self.opp1_grid.label.cget('text') == player:
-                self.mark_lost_ships(lost_ships, self.opp1_grid)
-            if self.opp2_grid.label.cget('text') == player:
-                self.mark_lost_ships(lost_ships, self.opp2_grid)
-            if self.opp3_grid.label.cget('text') == player:
-                self.mark_lost_ships(lost_ships, self.opp3_grid)
+            if lost_ships:
+                self.mark_lost_ships(lost_ships)
 
-        self.update()
+    def mark_lost_ships(self, lost_ships):
+        for player, ship in lost_ships.items():
+            if self.nickname != player:
+                ship_size = self.game.identifier.get(ship)[1]
+                x = self.ships.get(ship)[0]
+                y = self.ships.get(ship)[1]
+                direction = self.ships.get(ship)[-1]
 
-    def mark_lost_ships(self, lost_ships, opp_grid):
-        if lost_ships:
-            for player, ship in lost_ships.items():
-                if self.nickname != player:
-                    ship_size = self.game.identifier.get(ship)[1]
-                    x = self.ships.get(ship)[0]
-                    y = self.ships.get(ship)[1]
-                    position = self.ships.get(ship)[-1]
-
-                    if position:
-                        for i in range(ship_size):
-                            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[x, y + i], fill="red")
-                    else:
-                        for i in range(ship_size):
-                            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[x + i, y], fill="red")
+                if direction:
+                    for i in range(ship_size):
+                        if self.opp1_grid.label.cget('text') == player:
+                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x, y + i], fill="red")
+                        elif self.opp2_grid.label.cget('text') == player:
+                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x, y + i], fill="red")
+                        elif self.opp3_grid.label.cget('text') == player:
+                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x, y + i], fill="red")
+                else:
+                    for i in range(ship_size):
+                        if self.opp1_grid.label.cget('text') == player:
+                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x + i, y], fill="red")
+                        elif self.opp2_grid.label.cget('text') == player:
+                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x + i, y], fill="red")
+                        elif self.opp3_grid.label.cget('text') == player:
+                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="red")
 
     def mark_hit_or_miss(self, v, opp_grid):
         if not v[-1]:
@@ -345,6 +343,8 @@ class MainApplication(tk.Tk):
             self.size = int(self.size)
             self.state = "NO_YOUR_GAME"
             self.c.create_game(self.size)
+
+            self.create_grids()
         else:
             tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
             self.choose_grid.lift()
@@ -413,6 +413,18 @@ class MainApplication(tk.Tk):
                 return
         return msg
 
+    def create_grids(self):
+        self.labels = []
+
+        self.my_grid = grid.GridFrame(master=self, size=self.size, mine=True)
+        self.opp1_grid = grid.GridFrame(master=self, size=self.size, mine=False)
+        self.opp2_grid = grid.GridFrame(master=self, size=self.size, mine=False)
+        self.opp3_grid = grid.GridFrame(master=self, size=self.size, mine=False)
+
+        self.labels.append(self.opp1_grid.label)
+        self.labels.append(self.opp2_grid.label)
+        self.labels.append(self.opp3_grid.label)
+
     def process_incoming(self):
         while self.queue.qsize():
             try:
@@ -443,19 +455,16 @@ class MainApplication(tk.Tk):
                         self.state = "NO_GAMES"
                         self.choose_game()
                 elif self.state == "NO_JOIN":
-                    if msg[0] == cm.RSP_OK:
-                        self.state = "NO_SHIPS"
-                        msg[1] = eval(msg[1])
-                        self.size = int(msg[1][0])
-                        self.init_board(self.games[self.joining_game_id], msg[1][1])
-                        self.choose_ships()
-                    elif msg[0] == cm.RSP_MASTER_JOIN:
-                        print "Liitusin siiiin"
+                    if msg[0] == cm.RSP_MASTER_JOIN:
                         self.state = "NO_SHIPS"
                         data = json.loads(msg[1])
-                        print data
                         self.size = int(data["size"])
+                        self.opponents = json.loads(msg[2])
+                        print "Opponents: ", self.opponents
                         self.init_board(self.games[self.joining_game_id], data["master"])
+                        self.create_grids()
+                        self.change_names(self.opponents)
+                        self.update()
                         self.choose_ships()
                     else:
                         tkMessageBox.showwarning("Didn't get grid size from server.")
@@ -465,13 +474,15 @@ class MainApplication(tk.Tk):
                     if msg[0] == cm.RSP_OK:
                         self.ships = {}
                         self.ships = json.loads(msg[1])
-                        self.show_grids()
+                        self.create_grids()
+                        self.after(200, self.show_grids())
                     elif msg[0] == cm.RSP_MASTER_JOIN:
-                        print "Somebody joined, WOHOOO"
                         data = json.loads(msg[1])
+                        self.create_grids()
+                        self.opponents = json.loads(msg[2])
                         if data["master"] == self.nickname:
-                            print "Vaheta nimi ara 2222"
                             self.change_names(json.loads(msg[2]))
+                            self.update()
                         else:
                             self.state = "NO_START_GAME"
                             self.choose_ships()
@@ -487,10 +498,12 @@ class MainApplication(tk.Tk):
                         if self.game.master == self.nickname:
                             self.shooting_frame(self.opponents)
                     elif msg[0] == cm.RSP_MASTER_JOIN:
-                        print "Somebody joined when I was already wanting to start"
                         resp = json.loads(msg[1])
                         if resp["master"] == self.nickname:
-                            print "Vaheta nimi ara."
+                            for name in json.loads(msg[2]):
+                                if name not in self.opponents and name != self.nickname:
+                                    self.opponents.append(name)
+                            self.change_names(self.opponents)
                         else:
                             self.state = "NO_YOUR_GAME"
                             self.choose_ships()
@@ -524,12 +537,9 @@ if __name__ == "__main__":
     # app.c.sock.close()
     # TODO: close the script somehow?
 
-# TODO: if you get a hit, you can keep shooting at that player's ships - server-side
-# TODO: show opponent's name/notify master when somebody joins game
 # TODO: master cannot start game before all the opponents have placed ships
-# TODO: show who hit you when hit
-# TODO: if any ships sinking, all should see
-# TODO: whn you lost -> possibility to leave OR possibility for spectator mode
+# TODO: show who hit you when hit                                                  # Test this
+# TODO: when you lost -> possibility to leave OR possibility for spectator mode
 # TODO: if master leaves, random new master
 # TODO: if only one player and he leaves, delete the game
 # TODO: if you leave (cancel the main gui window), remove your ships from the game
