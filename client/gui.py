@@ -143,10 +143,10 @@ class MainApplication(tk.Tk):
             ship_size = self.game.identifier.get(ship)[1]
             if value[2]:
                 for i in range(ship_size):
-                    self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0], value[1] + i], fill="blue")
+                    self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0], value[1] + i], fill="peru")
             else:
                 for i in range(ship_size):
-                    self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0] + i, value[1]], fill="blue")
+                    self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0] + i, value[1]], fill="peru")
 
         if self.nickname == self.game.master:
             start_button.grid(row=6, columnspan=2)
@@ -247,7 +247,12 @@ class MainApplication(tk.Tk):
                 if self.opp3_grid.label.cget('text') == player:
                     self.mark_hit_or_miss(v, self.opp3_grid)
             elif self.nickname == player and v[-1]:
-                self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
+                self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="firebrick")
+
+                self.shooter = tk.Label(self, text="You got hit by %s!" % origin, fg="firebrick",
+                                        font=("Helvetica", 14, "bold"), padx=10, pady=10)
+                self.shooter.grid(row=9, columnspan=4)
+                self.shooter.after(4000, self.shooter.destroy)
 
             if lost_ships:
                 self.mark_lost_ships(lost_ships)
@@ -263,25 +268,25 @@ class MainApplication(tk.Tk):
                 if direction:
                     for i in range(ship_size):
                         if self.opp1_grid.label.cget('text') == player:
-                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x, y + i], fill="red")
+                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x, y + i], fill="firebrick")
                         elif self.opp2_grid.label.cget('text') == player:
-                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x, y + i], fill="red")
+                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x, y + i], fill="firebrick")
                         elif self.opp3_grid.label.cget('text') == player:
-                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x, y + i], fill="red")
+                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x, y + i], fill="firebrick")
                 else:
                     for i in range(ship_size):
                         if self.opp1_grid.label.cget('text') == player:
-                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x + i, y], fill="red")
+                            self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[x + i, y], fill="firebrick")
                         elif self.opp2_grid.label.cget('text') == player:
-                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x + i, y], fill="red")
+                            self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x + i, y], fill="firebrick")
                         elif self.opp3_grid.label.cget('text') == player:
-                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="red")
+                            self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="firebrick")
 
     def mark_hit_or_miss(self, v, opp_grid):
         if not v[-1]:
-            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="DodgerBlue3")
         else:
-            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="red")
+            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="firebrick")
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -544,10 +549,8 @@ if __name__ == "__main__":
     # TODO: close the script somehow?
 
 # TODO: master cannot start game before all the opponents have placed ships
-# TODO: show who hit you when hit                                                  # Test this
 # TODO: when you lost -> possibility to leave OR possibility for spectator mode
 # TODO: if master leaves, random new master
 # TODO: if only one player and he leaves, delete the game
 # TODO: if you leave (cancel the main gui window), remove your ships from the game
 # TODO: games page reloads after entering wrong grid size - maybe fix?
-# TODO: fix color code (mark_lost_ships)
