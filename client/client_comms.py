@@ -70,27 +70,12 @@ class Comm:
         control.
         """
         while self.running:
-            # To simulate asynchronous I/O, we create a random number at
-            # random intervals. Replace the following 2 lines with the real
-            # thing.
             msg = self.sock.recv(DEFAULT_BUFFER_SIZE)
-            # print msg
             self.queue.put(msg)
 
     def query_nick(self, nick):
-        # Just a placeholder for now
-        if ':' in nick:
-            LOG.error('":" not allowed in nickname.')
-            return False
         self.sock.send(cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick]))
         LOG.info(cm.CTR_MSGS[cm.QUERY_NICK])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # if msg[0] == cm.RSP_OK:
-        #     LOG.info("Nickname created.")
-        #     return True
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     return False
 
     def query_place_ships(self, game_id, ships):
         """
@@ -105,14 +90,6 @@ class Comm:
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_PLACE_SHIPS, game_id, ship_dump])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_PLACE_SHIPS])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # if msg[0] == cm.RSP_OK:
-        #     LOG.info("Ships placed successfully.")
-        #     return True
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     print("Response not ok!")
-        #     return False
 
     # Is expected that server thread already knows who it is talking to, so no need for a nick, if not
     # Then these methods need to have a nick with them
@@ -120,58 +97,21 @@ class Comm:
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_NEW_GAME, str(game)])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_NEW_GAME])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # if msg[0] == cm.RSP_OK:
-        #     LOG.info("Game created successfully.")
-        #     return True, msg[1]
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     return False
 
     def join_game(self, chosen_game_id):
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_JOIN_GAME, chosen_game_id])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_JOIN_GAME])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # # Expects to receive list of games as a second part of msg
-        # if msg[0] == cm.RSP_OK:
-        #     LOG.info("Game joined successfully.")
-        #     # Probably needs a game as a second part of message
-        #     loading = json.loads(msg[1], encoding='utf-8')
-        #     size = loading[0]
-        #     master = loading[1]
-        #     return size, master
-        #     # If not then:
-        #     # return True
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     return False
 
     def query_games(self):
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_GAMES])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_GAMES])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # # Expects to receive list of games/gameID-s as a second part of msg
-        # if msg[0] == cm.RSP_OK:
-        #     LOG.info("Received list of games available for joining.")
-        #     return msg[1]
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     return False
 
     def query_start_game(self, game_id):
         msg = cm.MSG_FIELD_SEP.join([cm.START_GAME, game_id])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.START_GAME])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # if msg[0] == cm.RSP_MULTI_OK:
-        #     LOG.info("Received game info that is being started.")
-        #     # Assumes that all info about the game that is to be started will be in msg parts 1-...
-        #     return json.loads(msg[1], encoding='utf-8')
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     return False
 
     def query_shoot(self, positions, nick, game_id):
         # the positions should be dictionary nick: coordinate
@@ -182,34 +122,6 @@ class Comm:
         msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHOOT, shooting_dump])
         self.sock.send(msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
-        # msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-        # if msg[0] == cm.RSP_MULTI_OK:
-        #     LOG.info("Shot processed successfully.")
-        #     return True
-        # else:
-        #     LOG.error(cm.ERR_MSGS[msg[0]])
-        #     return False
-
-    # def listen_shots_fired(self):
-    #     self.sock.settimeout(5)
-    #     try:
-    #         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-    #         if msg[0] == cm.RSP_MULTI_OK:
-    #             return True, json.loads(msg[1], encoding='utf-8')
-    #     except timeout:
-    #         msg = False
-    #     return msg
-    #
-    # def listen_start_game(self):
-    #     self.sock.settimeout(5)
-    #     try:
-    #         msg = self.sock.recv(DEFAULT_BUFFER_SIZE).split(cm.MSG_FIELD_SEP)
-    #         if msg[0] == cm.RSP_MULTI_OK:
-    #             LOG.info("Received game info that is being started by master.")
-    #             return json.loads(msg[1], encoding='utf-8')
-    #     except timeout:
-    #         msg = False
-    #     return msg
 
     def something(self):
         pass

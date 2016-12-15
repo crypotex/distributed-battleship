@@ -6,7 +6,7 @@ class Client:
         self.socket = socket
 
     def update_nick(self, new_nick):
-        if len(new_nick) < 3 or len(new_nick) > 29:
+        if len(new_nick) < 4 or len(new_nick) > 28:
             return False
         else:
             self.nick = new_nick

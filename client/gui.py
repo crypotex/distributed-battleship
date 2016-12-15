@@ -237,29 +237,52 @@ class MainApplication(tk.Tk):
     def show_hits(self, msg):
         shots = msg['shots_fired']
         origin = msg['origin']
-        print "Show_hits: ", str(msg)
+        lost_ships = msg['ships_lost']
 
         for player, v in shots.items():
             if self.nickname == origin:
                 if self.opp1_grid.label.cget('text') == player:
-                    if not v[-1]:
-                        self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[v[0], v[1]], fill="dim gray")
-                    else:
-                        self.opp1_grid.gridp.itemconfig(self.opp1_grid.gridp.rect[v[0], v[1]], fill="red")
-
+                    self.mark_hit_or_miss(v, self.opp1_grid)
+                    self.mark_lost_ships(lost_ships, self.opp1_grid)
                 if self.opp2_grid.label.cget('text') == player:
-                    if not v[-1]:
-                        self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[v[0], v[1]], fill="dim gray")
-                    else:
-                        self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[v[0], v[1]], fill="red")
-
+                    self.mark_hit_or_miss(v, self.opp2_grid)
+                    self.mark_lost_ships(lost_ships, self.opp2_grid)
                 if self.opp3_grid.label.cget('text') == player:
-                    if not v[-1]:
-                        self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[v[0], v[1]], fill="dim gray")
-                    else:
-                        self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[v[0], v[1]], fill="red")
+                    self.mark_hit_or_miss(v, self.opp3_grid)
+                    self.mark_lost_ships(lost_ships, self.opp3_grid)
             elif self.nickname == player and v[-1]:
                 self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="red")
+
+            if self.opp1_grid.label.cget('text') == player:
+                self.mark_lost_ships(lost_ships, self.opp1_grid)
+            if self.opp2_grid.label.cget('text') == player:
+                self.mark_lost_ships(lost_ships, self.opp2_grid)
+            if self.opp3_grid.label.cget('text') == player:
+                self.mark_lost_ships(lost_ships, self.opp3_grid)
+
+        self.update()
+
+    def mark_lost_ships(self, lost_ships, opp_grid):
+        if lost_ships:
+            for player, ship in lost_ships.items():
+                if self.nickname != player:
+                    ship_size = self.game.identifier.get(ship)[1]
+                    x = self.ships.get(ship)[0]
+                    y = self.ships.get(ship)[1]
+                    position = self.ships.get(ship)[-1]
+
+                    if position:
+                        for i in range(ship_size):
+                            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[x, y + i], fill="red")
+                    else:
+                        for i in range(ship_size):
+                            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[x + i, y], fill="red")
+
+    def mark_hit_or_miss(self, v, opp_grid):
+        if not v[-1]:
+            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="dim gray")
+        else:
+            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="red")
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -280,6 +303,10 @@ class MainApplication(tk.Tk):
     def callback_nickname(self, event, nickname):
         if not nickname:
             tkMessageBox.showwarning("Warning", "Please choose a nickname to proceed!")
+        if len(nickname) < 4 or len(nickname) > 28:
+            tkMessageBox.showwarning("Warning", "Length should be between 4-28.")
+        if "$" in nickname:
+            tkMessageBox.showwarning("Warning", "Please don't use the dollar sign in nickname.")
         else:
             self.c.query_nick(nickname)
 
@@ -316,6 +343,7 @@ class MainApplication(tk.Tk):
 
         if self.size and self.size.isdigit():
             self.size = int(self.size)
+            self.state = "NO_YOUR_GAME"
             self.c.create_game(self.size)
         else:
             tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
@@ -393,7 +421,6 @@ class MainApplication(tk.Tk):
                 if self.state == "NO_NICK":
                     if msg[0] != cm.RSP_OK:
                         tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
-                        self.choose_nickname()
                     else:
                         self.nickname = msg[1]
                         self.c.query_games()
@@ -402,7 +429,6 @@ class MainApplication(tk.Tk):
                     if msg[0] == cm.RSP_OK:
                         self.games = eval(msg[1])
                         self.choose_game()
-                        self.state = "NO_YOUR_GAME"
                     else:
                         print("Didn't get response from server about games.")
                 elif self.state == "NO_YOUR_GAME":
@@ -443,6 +469,9 @@ class MainApplication(tk.Tk):
                         self.state = "START_GAME"
                         if self.game.master == self.nickname:
                             self.shooting_frame(self.opponents)
+                    else:
+                        tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
+                        self.show_grids()
                 elif self.state == "START_GAME":
                     if msg[0] == cm.RSP_MULTI_OK:
                         extra = json.loads(msg[1])
