@@ -53,38 +53,6 @@ class Server:
         #self.socket = self.__socket_init(addr, port)
         #self.main_threader()
 
-    @staticmethod
-    def __socket_init(server_ip, port):
-        """ Socket Initialization """
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.bind((server_ip, port))
-        except socket.error as e:
-            LOG.error("Socket error: %s" % str(e))
-            exit(1)
-        LOG.info("Socket initialized")
-        return s
-
-    # def main_threader(self):
-    #     #self.socket.listen(5)
-    #     while True:
-    #         try:
-    #             client, address = self.socket.accept()
-    #             client.settimeout(7200)
-    #
-    #             t_name = "%s-%s" % (address[0], address[1])
-    #             t_client = Client(ip=address[0], port=address[1], socket=client, nick=t_name)
-    #
-    #             LOG.info("New client connected, adding to current session %s." % t_name)
-    #             print(self.session.clients)
-    #
-    #             threading.Thread(target=self.run_client_thread, args=(t_client, )).start()
-    #
-    #         except KeyboardInterrupt:
-    #             LOG.exception('Ctrl+C - terminating server')
-    #             break
-    #     self.socket.close()
-
     def run_client_thread(self, ch, method, properties, body):
         LOG.info("New CALLBACK initialized with :%s." % str(body))
         resp = self.session.handle_request(body)
