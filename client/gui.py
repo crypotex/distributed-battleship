@@ -39,6 +39,7 @@ class MainApplication(tk.Tk):
         self.ships = {}
         self.servers = query_servers()
         self.choose_server()
+        self.protocol("WM_DELETE_WINDOW", self.on_exit)
 
     def choose_server(self):
         self.clear()
@@ -526,6 +527,11 @@ class MainApplication(tk.Tk):
             except Queue.Empty:
                 pass
 
+    def on_exit(self):
+        self.destroy()
+        self.c.stop_the_thread_please()
+        print("Beep Beep Beep Beep, Closing the shop!")
+        sys.exit(0)
 
 
 if __name__ == "__main__":
