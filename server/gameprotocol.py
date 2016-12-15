@@ -31,7 +31,7 @@ class GameProtocol:
             self.turn_list.append(client)
             result = {"size": self.size,
                       "master": self.master}
-            return json.dumps([result, [self.master, client]], encoding='utf-8')
+            return json.dumps({"result": result, "nicks": [self.master, client]}, encoding='utf-8')
 
     def place_ships(self, client_nick, ships):
         enc_ships = json.loads(ships, encoding='utf-8')
