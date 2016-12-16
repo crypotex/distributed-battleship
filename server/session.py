@@ -161,7 +161,7 @@ def prepare_response(clients, data=None):
             "clients": clients, }
     if len(clients) > 1:
         resp["type"] = cm.RSP_MULTI_OK
-    if data:
+    if data is not None:
         resp["data"] = data
     return json.dumps(resp, encoding='utf-8')
 
