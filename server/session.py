@@ -59,6 +59,7 @@ class Session:
             response = {
                 'size': size,
                 'master': master_nick,
+                'game_id': gid,
             }
             return prepare_response(client_id, data=response)
 
