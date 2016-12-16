@@ -98,7 +98,7 @@ class Comm:
                'client_id': client}
         if len(data) > 0:
             msg['data'] = data
-        return msg
+        return json.dumps(msg)
 
     def query_nick(self, nick):
         msg = self.prepare_response(cm.QUERY_NICK, self.queue_name, {'nick': nick})

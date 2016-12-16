@@ -26,10 +26,10 @@ class Session:
             return prepare_neg_response(cm.RSP_CONNECTION_FAILED, [client_id])
         else:
             self.clients[client_id] = client_id
-            return prepare_response(client_id)
+            return prepare_response([client_id])
 
     def assign_nickname(self, client_id, client_nick):
-        if client_id not in self.clients:
+        if client_id in self.clients:
             if client_nick not in self.reverse_clients:
                 self.clients[client_id] = client_nick
                 self.reverse_clients[client_nick] = client_id
@@ -97,7 +97,7 @@ class Session:
         enc_json = json.loads(msg_json, encoding='utf-8')
         try:
             req = enc_json['type']
-            client_id = enc_json['client']
+            client_id = enc_json['client_id']
         except KeyError:
             print("Shitty request, do nothing")
             return

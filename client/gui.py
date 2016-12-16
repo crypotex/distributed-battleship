@@ -435,15 +435,15 @@ class MainApplication(tk.Tk):
             try:
                 msg = json.loads(self.queue.get(0))
                 print self.state, msg
-                if self.state == "NO_CONN":
-                    self.state = "NO_NICK"
-                elif len(msg) > 1 and self.c.queue_name in msg['clients']:
+                if len(msg) > 1 and self.c.queue_name in msg['clients']:
+                    if self.state == "NO_CONN":
+                        self.state = "NO_NICK"
                     # print self.state, str(msg)
-                    if self.state == "NO_NICK":
+                    elif self.state == "NO_NICK":
                         if msg['type'] != cm.RSP_OK:
                             tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
                         else:
-                            self.nickname = msg['data']  # TODO: vaata yle, mis key all veel on
+                            self.nickname = msg['data']['nick']  # TODO: vaata yle, mis key all veel on
                             self.c.query_games()
                             self.state = "NO_GAMES"
                     elif self.state == "NO_GAMES":
@@ -466,7 +466,7 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             self.state = "NO_SHIPS"
-                            self.size = int(msg["data"]) # TODO: vaata üle, mis key all
+                            self.size = int(msg["data"]) # TODO: vaata yle, mis key all
                             self.opponents = json.loads(msg[2])
                             self.init_board(self.games[self.joining_game_id], msg["data"]["master"])  # TODO: vaata yle, mis key all on
                             self.create_grids()
