@@ -1,4 +1,3 @@
-import json
 from itertools import chain
 
 __author__ = "Andre"
@@ -30,11 +29,11 @@ class GameProtocol:
             self.table[client] = [[0 for _ in range(self.size)] for i in range(self.size)]
             self.turn_list.append(client)
             result = {"size": self.size,
-                      "master": self.master}
-            return json.dumps({"result": result, "nicks": [self.master, client]}, encoding='utf-8')
+                      "master": self.master,
+                      }
+            return result
 
-    def place_ships(self, client_nick, ships):
-        enc_ships = json.loads(ships, encoding='utf-8')
+    def place_ships(self, client_nick, enc_ships):
         if type(enc_ships) is not dict:
             print("Stop sending me non dictionaries ... I want dict, you send: %s." % str(type(enc_ships)))
             return False
@@ -82,7 +81,7 @@ class GameProtocol:
             return False
 
     def get_nicks(self):
-        return json.dumps([nick for nick in self.table], encoding='utf-8')
+        return [nick for nick in self.table]
 
     def shoot_bombs(self, info):
         shooting_gallery = {}
@@ -120,7 +119,7 @@ class GameProtocol:
                   "ships_lost": she_dead,
                   "origin": origin,
                   "shots_fired": shooting_gallery}
-        return json.dumps(result, encoding="utf-8")
+        return result
 
     def validate_coord(self, x, y):
         if 0 <= x < self.size and 0 <= y < self.size:
