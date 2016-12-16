@@ -35,13 +35,13 @@ class Server:
 
         self.session = Session()
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=addr))
-        self.to_server = connection.channel()
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=addr))
+        self.to_server = self.connection.channel()
         self.to_server.queue_declare(queue='in')
 
-        self.from_server = connection.channel()
+        self.from_server_multi = self.connection.channel()
         #result = self.from_server.queue_declare(queue='out')
-        self.from_server.exchange_declare(exchange='out', type='fanout')
+        self.from_server_multi.exchange_declare(exchange='multi_out', type='fanout')
 
         #self.from_server.queue_bind(exchange='out', queue=result.method.queue)
 
@@ -56,6 +56,27 @@ class Server:
     def run_client_thread(self, ch, method, properties, body):
         LOG.info("New CALLBACK initialized with :%s." % str(body))
         resp = self.session.handle_request(body)
+        #print "Jeeeheee, ", resp
+        #print self.session.clients
+        LOG.info("Before sending, got response: %s." % resp)
+        if resp.startswith(cm.RSP_MULTI_OK):
+            #print "Multi-response: ", resp
+            self.from_server_multi.basic_publish(exchange='multi_out', routing_key='', body=resp)
+            LOG.info("RESPONSE WAS: %s" % resp)
+        elif resp.startswith(cm.RSP_CONNECTION_SUCCESS):
+            parts = resp.split(cm.MSG_FIELD_SEP)
+            #self.from_server.queue_bind(exchange='out', queue=parts[1])
+            #print "Connection success ", str(parts[1])
+            self.from_server = self.connection.channel()
+            #self.from_server.queue_declare(queue=parts[1])
+            #self.from_server.exchange_declare(exhange='out', type='direct')
+            self.from_server.basic_publish(exchange='out', routing_key=self.session.clients[parts[1]], body=resp)
+            LOG.info("RESPONSE WAS: %s" % resp)
+        # elif body.startswith(cm.QUERY_NICK):
+        #     data = resp.split(cm.MSG_FIELD_SEP)
+        #     print "Nyyd olen siin, ", self.session.clients[data[1]]
+        #     self.from_server.basic_publish(exchange='out', routing_key=self.session.clients[data[1]], body=resp)
+
         # if resp.startswith(cm.RSP_MULTI_OK) or resp.startswith(cm.RSP_MASTER_JOIN):
         #     nicks = resp.split(cm.MSG_FIELD_SEP)[-1]
         #     real_nicks = json.loads(nicks, encoding='utf-8')
@@ -65,7 +86,12 @@ class Server:
         # else:
         #     client.socket.send(resp)
         #     LOG.info("Response is: %s." % resp)
-        self.from_server.basic_publish(exchange='out', routing_key='', body=resp)
+        else:
+            parts = resp.split(cm.MSG_FIELD_SEP)
+            #print "Other responses: ", resp
+            #print self.session.clients[parts[1]]
+            self.from_server.basic_publish(exchange='out', routing_key=self.session.clients[parts[1]], body=resp)
+            LOG.info("RESPONSE WAS: %s" % resp)
 
         # while True:
         #     try:

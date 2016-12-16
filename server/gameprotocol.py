@@ -39,20 +39,20 @@ class GameProtocol:
             print("Stop sending me non dictionaries ... I want dict, you send: %s." % str(type(enc_ships)))
             return False
         if len(enc_ships) != 5:
-            print(enc_ships)
+            #print(enc_ships)
             return False
         elif set(enc_ships.keys()) != set(self.identifier.keys()):
-            print(ships.keys())
+            #print(ships.keys())
             return False
         else:
-            print(enc_ships)
+            #print(enc_ships)
             for ship, params in enc_ships.items():
                 if not self._process_ship(client_nick, params[0], params[1], params[2], ship):
                     print ship
                     return False
             self.alive_ships[client_nick] = {i: True for i in enc_ships.keys()}
 
-            print(enc_ships)
+            #print(enc_ships)
             return True
 
     def _process_ship(self, client_nick, x, y, horizontal, ship):

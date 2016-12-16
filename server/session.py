@@ -22,10 +22,17 @@ class Session:
 
     def new_client(self, client):
         if client in self.clients:
-            return cm.RSP_NICK_EXISTS
+            return cm.RSP_CONNECTION_FAILED
         else:
             self.clients[client] = client
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client])
+            return cm.MSG_FIELD_SEP.join([cm.RSP_CONNECTION_SUCCESS, client, client])
+
+    def assign_nickname(self, client, queue_name):
+        if queue_name in self.clients and client not in self.clients:
+            self.clients[client] = self.clients.pop(queue_name)
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, queue_name])
+        else:
+            return cm.RSP_NO_SUCH_CLIENT
 
     def new_game(self, size, master):
         if size < 5 or size > 15:
@@ -36,7 +43,7 @@ class Session:
             gid = str(uuid.uuid4())
             game = GameProtocol(game_id=gid, size=size, master=master)
             self.games[gid] = game
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, gid])
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, master, gid])
 
     def join_game(self, game_id, client):
         if game_id in self.games:
@@ -49,7 +56,6 @@ class Session:
                 resp = self.games[game_id].user_join_game(client)
                 if resp:
                     jresp = json.loads(resp, encoding='utf-8')
-                    print(jresp)
                     resp = json.dumps(jresp["result"])
                     nicks = json.dumps(jresp["nicks"])
                     return cm.MSG_FIELD_SEP.join([cm.RSP_MASTER_JOIN, resp, nicks])
@@ -90,6 +96,13 @@ class Session:
 
         if req == cm.QUERY_NICK:
             if nick_ok(client):
+                resp = self.assign_nickname(client, extra[0])
+                return resp
+            else:
+                return cm.RSP_CONNECTION_FAILED
+
+        elif req == cm.QUERY_CONNECTION:
+            if nick_ok(client):
                 resp = self.new_client(client)
                 return resp
             else:
@@ -97,7 +110,7 @@ class Session:
 
         elif req == cm.QUERY_GAMES:
             games = json.dumps([i for i in self.games], encoding='utf-8')
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, games])
+            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, games])
 
         elif req == cm.QUERY_NEW_GAME:
             resp = self.new_game(size=int(extra[0]), master=client)
@@ -110,7 +123,7 @@ class Session:
         elif req == cm.QUERY_PLACE_SHIPS:
             resp = self.games[extra[0]].place_ships(client_nick=client, ships=extra[1])
             if resp:
-                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, extra[1]])
+                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, extra[1]])
             else:
                 return cm.RSP_SHIPS_PLACEMENT
 
@@ -122,13 +135,12 @@ class Session:
             resp = self.shots_fired(extra[0])
             return resp
 
-
         else:
             print("No mans land")
             return cm.RSP_NOT_IMPLEMENTED_YET
 
 def nick_ok(nick):
-    if len(nick) < 4 or len(nick) > 28:
+    if len(nick) < 4 or len(nick) > 100:
         return False
     else:
         return True

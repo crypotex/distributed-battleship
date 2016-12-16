@@ -27,7 +27,7 @@ class MainApplication(tk.Tk):
 
         self.queue = Queue.Queue()
         self.c = Comm(self.queue, self)
-        self.state = "NO_CONN"
+        self.state = ""
 
         # <create the rest of your GUI here>
         self.center(650, 800)
@@ -35,6 +35,7 @@ class MainApplication(tk.Tk):
         self.v2 = tk.IntVar()
 
         self.opponents = []
+        self.nickname = ""
 
         self.ships = {}
         self.servers = query_servers()
@@ -300,7 +301,7 @@ class MainApplication(tk.Tk):
     def callback_server(self, event):
         host = self.servers[self.v.get()]
         self.c.connect_to_server(host)
-        self.state = "NO_NICK"
+        self.state = "NO_CONN"
         # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
@@ -310,7 +311,7 @@ class MainApplication(tk.Tk):
         if "$" in nickname:
             tkMessageBox.showwarning("Warning", "Please don't use the dollar sign in nickname.")
         else:
-            self.c.query_nick(nickname)
+            self.c.query_nick(nickname, self.c.queue_name)
 
     def callback_game(self, event, games, b):
         if b <= len(games) - 1:
@@ -433,99 +434,104 @@ class MainApplication(tk.Tk):
         while self.queue.qsize():
             try:
                 msg = self.queue.get(0).split(cm.MSG_FIELD_SEP)
-                print self.state, str(msg)
-                if self.state == "NO_NICK":
-                    if msg[0] != cm.RSP_OK:
-                        tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
-                    else:
-                        self.nickname = msg[1]
-                        self.c.query_games(self.nickname)
-                        self.state = "NO_GAMES"
-                elif self.state == "NO_GAMES":
-                    if msg[0] == cm.RSP_OK:
-                        self.games = eval(msg[1])
-                        self.choose_game()
-                    else:
-                        print("Didn't get response from server about games.")
-                elif self.state == "NO_YOUR_GAME":
-                    if msg[0] == cm.RSP_OK:
-                        self.choose_grid.destroy()
-                        self.state = "NO_SHIPS"
-                        self.init_board(msg[1], self.nickname)
-                        self.choose_ships()
-                    else:
-                        print("Couldn't choose your game. ")
-                        tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
-                        self.state = "NO_GAMES"
-                        self.choose_game()
-                elif self.state == "NO_JOIN":
-                    if msg[0] == cm.RSP_MASTER_JOIN:
-                        self.state = "NO_SHIPS"
-                        data = json.loads(msg[1])
-                        self.size = int(data["size"])
-                        self.opponents = json.loads(msg[2])
-                        print "Opponents: ", self.opponents
-                        self.init_board(self.games[self.joining_game_id], data["master"])
-                        self.create_grids()
-                        self.change_names(self.opponents)
-                        self.update()
-                        self.choose_ships()
-                    else:
-                        tkMessageBox.showwarning("Didn't get grid size from server.")
-                        self.state = "NO_GAMES"
-                        self.choose_game()
-                elif self.state == "NO_SHIPS":
-                    if msg[0] == cm.RSP_OK:
-                        self.ships = {}
-                        self.ships = json.loads(msg[1])
-                        self.create_grids()
-                        self.after(200, self.show_grids())
-                    elif msg[0] == cm.RSP_MASTER_JOIN:
-                        data = json.loads(msg[1])
-                        self.create_grids()
-                        self.opponents = json.loads(msg[2])
-                        if data["master"] == self.nickname:
-                            self.change_names(json.loads(msg[2]))
-                            self.update()
+                print self.state, msg
+                if self.state == "NO_CONN":
+                    self.state = "NO_NICK"
+                elif len(msg) > 1 and (msg[1] == self.nickname or msg[2] == self.c.queue_name):
+                    #print self.state, str(msg)
+                    if self.state == "NO_NICK":
+                        if msg[0] != cm.RSP_OK:
+                            tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
                         else:
-                            self.state = "NO_START_GAME"
+                            self.nickname = msg[2]
+                            self.c.query_games(self.nickname)
+                            self.state = "NO_GAMES"
+                    elif self.state == "NO_GAMES" and msg[1] == self.nickname:
+                        if msg[0] == cm.RSP_OK:
+                            self.games = json.loads(msg[2])
+                            self.choose_game()
+                        else:
+                            print("Didn't get response from server about games.")
+                    elif self.state == "NO_YOUR_GAME" and msg[1] == self.nickname:
+                        if msg[0] == cm.RSP_OK:
+                            self.choose_grid.destroy()
+                            self.state = "NO_SHIPS"
+                            self.init_board(msg[2], self.nickname)
                             self.choose_ships()
-                    else:
-                        print("Didn't position ships.")
-                        self.state = "NO_YOUR_GAME"
-                        self.choose_ships()
-                elif self.state == "NO_START_GAME":
-                    if msg[0] == cm.RSP_MULTI_OK:
-                        self.opponents = eval(msg[1])
-                        self.change_names(self.opponents)
-                        self.state = "START_GAME"
-                        if self.game.master == self.nickname:
-                            self.shooting_frame(self.opponents)
-                    elif msg[0] == cm.RSP_MASTER_JOIN:
-                        resp = json.loads(msg[1])
-                        if resp["master"] == self.nickname:
-                            for name in json.loads(msg[2]):
-                                if name not in self.opponents and name != self.nickname:
-                                    self.opponents.append(name)
-                            self.change_names(self.opponents)
                         else:
+                            print("Couldn't choose your game. ")
+                            tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
+                            self.state = "NO_GAMES"
+                            self.choose_game()
+                    elif self.state == "NO_JOIN":
+                        if msg[0] == cm.RSP_MASTER_JOIN:
+                            self.state = "NO_SHIPS"
+                            data = json.loads(msg[1])
+                            self.size = int(data["size"])
+                            self.opponents = json.loads(msg[2])
+                            self.init_board(self.games[self.joining_game_id], data["master"])
+                            self.create_grids()
+                            self.change_names(self.opponents)
+                            self.update()
+                            self.choose_ships()
+                        else:
+                            tkMessageBox.showwarning("Didn't get grid size from server.")
+                            self.state = "NO_GAMES"
+                            self.choose_game()
+                    elif self.state == "NO_SHIPS":
+                        if msg[0] == cm.RSP_OK:
+                            self.ships = {}
+                            self.ships = json.loads(msg[2])
+                            self.create_grids()
+                            self.after(200, self.show_grids())
+                        elif msg[0] == cm.RSP_MASTER_JOIN:
+                            data = json.loads(msg[1])
+                            self.create_grids()
+                            self.opponents = json.loads(msg[2])
+                            if data["master"] == self.nickname:
+                                self.change_names(json.loads(msg[2]))
+                                self.update()
+                            else:
+                                self.state = "NO_START_GAME"
+                                self.choose_ships()
+                        else:
+                            print("Didn't position ships.")
                             self.state = "NO_YOUR_GAME"
                             self.choose_ships()
-                    else:
-                        tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
-                        self.show_grids()
-                elif self.state == "START_GAME":
-                    if msg[0] == cm.RSP_MULTI_OK:
-                        extra = json.loads(msg[1])
-                        if self.nickname == extra["next"]:
-                            self.shooting_frame(self.opponents)
-                        if self.nickname == extra["origin"]:
-                            self.destroy_shoot()
-                            self.show_hits(extra)
+                    elif self.state == "NO_START_GAME":
+                        if msg[0] == cm.RSP_MULTI_OK:
+                            self.opponents = eval(msg[1])
+                            self.change_names(self.opponents)
+                            self.state = "START_GAME"
+                            if self.game.master == self.nickname:
+                                self.shooting_frame(self.opponents)
+                        elif msg[0] == cm.RSP_MASTER_JOIN:
+                            resp = json.loads(msg[1])
+                            if resp["master"] == self.nickname:
+                                for name in json.loads(msg[2]):
+                                    if name not in self.opponents and name != self.nickname:
+                                        self.opponents.append(name)
+                                self.change_names(self.opponents)
+                            else:
+                                self.state = "NO_YOUR_GAME"
+                                self.choose_ships()
                         else:
-                            self.show_hits(extra)
-                    else:
-                        print("Something went wrong from getting shots fired.")
+                            tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
+                            self.show_grids()
+                    elif self.state == "START_GAME":
+                        if msg[0] == cm.RSP_MULTI_OK:
+                            extra = json.loads(msg[1])
+                            if self.nickname == extra["next"]:
+                                self.shooting_frame(self.opponents)
+                            if self.nickname == extra["origin"]:
+                                self.destroy_shoot()
+                                self.show_hits(extra)
+                            else:
+                                self.show_hits(extra)
+                        else:
+                            print("Something went wrong from getting shots fired.")
+                else:
+                    print msg
 
             except Queue.Empty:
                 pass

@@ -46,10 +46,17 @@ class Comm:
         self.to_server = connection.channel()
         self.to_server.queue_declare(queue='in')
 
+        # self.from_server_multi = connection.channel()
+        # result = self.from_server_multi.queue_declare()
+        # queue_name = result.method.queue
+        # self.from_server_multi.queue_bind(exchange='multi_out', queue=queue_name)
+
         self.from_server = connection.channel()
-        result = self.from_server.queue_declare(exclusive=True)
-        self.queue_name = result.method.queue
+        result2 = self.from_server.queue_declare()
+        self.queue_name = result2.method.queue
         self.from_server.queue_bind(exchange='out', queue=self.queue_name)
+
+        self.to_server.basic_publish(exchange='', routing_key='in', body=cm.MSG_FIELD_SEP.join([cm.QUERY_CONNECTION, self.queue_name]))
 
         self.periodic_call()
         self.thread1.start()
@@ -59,7 +66,6 @@ class Comm:
 
     def stop_the_thread_please(self):
         self.running = False
-        self.sock.close()
 
     def periodic_call(self):
         """
@@ -100,8 +106,8 @@ class Comm:
         #     print("Exiting")
         #     self.running = False
 
-    def query_nick(self, nick):
-        self.to_server.basic_publish(exchange='', routing_key='in', body=cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick]))
+    def query_nick(self, nick, queue):
+        self.to_server.basic_publish(exchange='', routing_key='in', body=cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick, queue]))
         LOG.info(cm.CTR_MSGS[cm.QUERY_NICK])
 
     def query_place_ships(self, nick, game_id, ships):
