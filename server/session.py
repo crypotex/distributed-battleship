@@ -18,21 +18,26 @@ __author__ = "Andre"
 class Session:
     def __init__(self):
         self.clients = {}
+        self.reverse_clients = {}
         self.games = {}
 
-    def new_client(self, client):
-        if client in self.clients:
-            return cm.RSP_CONNECTION_FAILED
+    def new_client(self, client_id):
+        if client_id in self.clients:
+            return prepare_neg_response(cm.RSP_CONNECTION_FAILED, [client_id])
         else:
-            self.clients[client] = client
-            return cm.MSG_FIELD_SEP.join([cm.RSP_CONNECTION_SUCCESS, client, client])
+            self.clients[client_id] = client_id
+            return prepare_response(client_id)
 
-    def assign_nickname(self, client, queue_name):
-        if queue_name in self.clients and client not in self.clients:
-            self.clients[client] = self.clients.pop(queue_name)
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, queue_name])
+    def assign_nickname(self, client_id, client_nick):
+        if client_id not in self.clients:
+            if client_nick not in self.reverse_clients:
+                self.clients[client_id] = client_nick
+                self.reverse_clients[client_nick] = client_id
+                return prepare_response([client_id], data={"nick": client_nick})
+            else:
+                return prepare_neg_response(cm.RSP_BAD_NICK, client_id)
         else:
-            return cm.RSP_NO_SUCH_CLIENT
+            return prepare_neg_response(cm.RSP_NO_SUCH_CLIENT, client_id)
 
     def new_game(self, size, master):
         if size < 5 or size > 15:
@@ -43,7 +48,7 @@ class Session:
             gid = str(uuid.uuid4())
             game = GameProtocol(game_id=gid, size=size, master=master)
             self.games[gid] = game
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, master, gid])
+            return "$".join([cm.RSP_OK, master, gid])
 
     def join_game(self, game_id, client):
         if game_id in self.games:
@@ -58,7 +63,7 @@ class Session:
                     jresp = json.loads(resp, encoding='utf-8')
                     resp = json.dumps(jresp["result"])
                     nicks = json.dumps(jresp["nicks"])
-                    return cm.MSG_FIELD_SEP.join([cm.RSP_MASTER_JOIN, resp, nicks])
+                    return "$".join([cm.RSP_MULTI_OK, resp, nicks])
                 else:
                     return cm.RSP_NOT_IMPLEMENTED_YET
         else:
@@ -69,7 +74,7 @@ class Session:
             resp = self.games[game_id].start_game()
             # Resp in here is just a punch of nicks
             if resp:
-                return cm.MSG_FIELD_SEP.join([cm.RSP_MULTI_OK, resp])
+                return "$".join([cm.RSP_MULTI_OK, resp])
             else:
                 return cm.RSP_SHIPS_NOT_PLACED
         else:
@@ -82,65 +87,84 @@ class Session:
         if game.check_client_turn(enc_dic["nick"]):
             resp = game.shoot_bombs(enc_dic['shots_fired'])
             if resp:
-                return cm.MSG_FIELD_SEP.join([cm.RSP_MULTI_OK, resp, nicks])
+                return "$".join([cm.RSP_MULTI_OK, resp, nicks])
             else:
                 return cm.RSP_INVALID_SHOT
         else:
             return cm.RSP_WAIT_YOUR_TURN
 
-    def handle_request(self, msg):
-        it = iter(msg.split(cm.MSG_FIELD_SEP))
-        req = it.next()
-        client = it.next()
-        extra = list(it)
-
-        if req == cm.QUERY_NICK:
-            if nick_ok(client):
-                resp = self.assign_nickname(client, extra[0])
+    def handle_request(self, msg_json):
+        enc_json = json.loads(msg_json, encoding='utf-8')
+        try:
+            req = enc_json['type']
+            client_id = enc_json['client']
+        except KeyError:
+            print("Shitty request, do nothing")
+            return
+        try:
+            if req == cm.QUERY_CONNECTION:
+                resp = self.new_client(client_id)
                 return resp
-            else:
-                return cm.RSP_CONNECTION_FAILED
 
-        elif req == cm.QUERY_CONNECTION:
-            if nick_ok(client):
-                resp = self.new_client(client)
+            elif req == cm.QUERY_NICK:
+                resp = self.assign_nickname(client_id, enc_json['data']['nick'])
                 return resp
+
+            elif req == cm.QUERY_GAMES:
+                # games = json.dumps([i for i in self.games], encoding='utf-8')
+                pass
+
+            elif req == cm.QUERY_NEW_GAME:
+                # resp = self.new_game(size=int(extra[0]), master=client)
+                pass
+
+            elif req == cm.QUERY_JOIN_GAME:
+                # resp = self.join_game(game_id=extra[0], client=client)
+                pass
+
+            elif req == cm.QUERY_PLACE_SHIPS:
+                """
+                resp = self.games[extra[0]].place_ships(client_nick=client, ships=extra[1])
+                if resp:
+                    return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, extra[1]])
+                else:
+                    return cm.RSP_SHIPS_PLACEMENT
+                """
+                pass
+
+            elif req == cm.START_GAME:
+                pass
+
+            elif req == cm.QUERY_SHOOT:
+                pass
+
             else:
-                return cm.RSP_BAD_NICK
+                print("No mans land")
+                return cm.RSP_NOT_IMPLEMENTED_YET
+        except KeyError:
+            print("Request has much info, but no data, put everything in data.")
+            return prepare_neg_response(req, client_id)
 
-        elif req == cm.QUERY_GAMES:
-            games = json.dumps([i for i in self.games], encoding='utf-8')
-            return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, games])
 
-        elif req == cm.QUERY_NEW_GAME:
-            resp = self.new_game(size=int(extra[0]), master=client)
-            return resp
+def prepare_response(clients, data=None):
+    resp = {"type": cm.RSP_OK,
+            "clients": clients, }
+    if len(clients) > 1:
+        resp["type"] = cm.RSP_MULTI_OK
+    if data:
+        resp["data"] = data
+    return json.dumps(resp, encoding='utf-8')
 
-        elif req == cm.QUERY_JOIN_GAME:
-            resp = self.join_game(game_id=extra[0], client=client)
-            return resp
 
-        elif req == cm.QUERY_PLACE_SHIPS:
-            resp = self.games[extra[0]].place_ships(client_nick=client, ships=extra[1])
-            if resp:
-                return cm.MSG_FIELD_SEP.join([cm.RSP_OK, client, extra[1]])
-            else:
-                return cm.RSP_SHIPS_PLACEMENT
+def prepare_neg_response(resp_type, client):
+    resp = {"type": resp_type,
+            "clients": [client],
+            "msg": cm.ERR_MSGS[resp_type]}
+    return json.dumps(resp, encoding='utf-8')
 
-        elif req == cm.START_GAME:
-            resp = self.start_game(game_id=extra[0], client=client)
-            return resp
-
-        elif req == cm.QUERY_SHOOT:
-            resp = self.shots_fired(extra[0])
-            return resp
-
-        else:
-            print("No mans land")
-            return cm.RSP_NOT_IMPLEMENTED_YET
 
 def nick_ok(nick):
-    if len(nick) < 4 or len(nick) > 100:
+    if len(nick) < 4 or len(nick) > 28:
         return False
     else:
         return True

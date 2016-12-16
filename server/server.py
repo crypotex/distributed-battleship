@@ -56,10 +56,16 @@ class Server:
     def run_client_thread(self, ch, method, properties, body):
         LOG.info("New CALLBACK initialized with :%s." % str(body))
         resp = self.session.handle_request(body)
+        enc_resp = json.loads(resp)
         #print "Jeeeheee, ", resp
         #print self.session.clients
         LOG.info("Before sending, got response: %s." % resp)
-        if resp.startswith(cm.RSP_MULTI_OK):
+        for client in enc_resp['clients']:
+            self.from_server.basic_publish(exchange='out', routing_key=client, body=resp)
+            LOG.info("Sent response to %s, msg was: %s." % (client, enc_resp) )
+
+        """
+        if enc_resp['type'] == cm.RSP_MULTI_OK:
             #print "Multi-response: ", resp
             self.from_server_multi.basic_publish(exchange='multi_out', routing_key='', body=resp)
             LOG.info("RESPONSE WAS: %s" % resp)
@@ -87,11 +93,11 @@ class Server:
         #     client.socket.send(resp)
         #     LOG.info("Response is: %s." % resp)
         else:
-            parts = resp.split(cm.MSG_FIELD_SEP)
             #print "Other responses: ", resp
             #print self.session.clients[parts[1]]
-            self.from_server.basic_publish(exchange='out', routing_key=self.session.clients[parts[1]], body=resp)
+            self.from_server.basic_publish(exchange='out', routing_key=enc_resp['clients'][0], body=resp)
             LOG.info("RESPONSE WAS: %s" % resp)
+        """
 
         # while True:
         #     try:
