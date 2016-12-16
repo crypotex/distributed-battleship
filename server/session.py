@@ -104,6 +104,9 @@ class Session:
         else:
             return prepare_neg_response(cm.RSP_WAIT_YOUR_TURN, client_id)
 
+    def place_ships(self, client_id, ships_dict):
+        pass
+
     def handle_request(self, msg_json):
         enc_json = json.loads(msg_json, encoding='utf-8')
         try:
@@ -137,10 +140,11 @@ class Session:
                 pass
 
             elif req == cm.START_GAME:
-                pass
+                resp = self.start_game(client_id, enc_json['data']['game_id'])
 
             elif req == cm.QUERY_SHOOT:
-                pass
+                resp = self.shots_fired(client_id, enc_json['data'])
+                return resp
 
             else:
                 print("No mans land")
@@ -153,10 +157,10 @@ class Session:
 def prepare_response(clients, data=None):
     if isinstance(clients, str):
         clients = [clients]
-    resp = {"type": 1,
+    resp = {"type": cm.RSP_OK,
             "clients": clients, }
     if len(clients) > 1:
-        resp["type"] = 2
+        resp["type"] = cm.RSP_MULTI_OK
     if data:
         resp["data"] = data
     return json.dumps(resp, encoding='utf-8')
