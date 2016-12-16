@@ -49,10 +49,10 @@ class Session:
     def new_game(self, client_id, size):
         if size < 5 or size > 15:
             return prepare_neg_response(cm.RSP_BAD_SIZE, client_id)
-        elif client_id not in self.reverse_clients:
+        elif client_id not in self.clients:
             return prepare_neg_response(cm.RSP_NO_SUCH_CLIENT, client_id)
         else:
-            master_nick = self.reverse_clients[client_id]
+            master_nick = self.clients[client_id]
             gid = str(uuid.uuid4())
             game = GameProtocol(game_id=gid, size=size, master=master_nick)
             self.games[gid] = game
@@ -105,7 +105,15 @@ class Session:
             return prepare_neg_response(cm.RSP_WAIT_YOUR_TURN, client_id)
 
     def place_ships(self, client_id, ships_dict):
-        pass
+        if ships_dict['game_id'] in self.games:
+            client_nick = self.clients[client_id]
+            resp = self.games[ships_dict['game_id']].place_ships(client_nick, ships_dict['ships'])
+            if resp:
+                return prepare_response(client_id, resp)
+            else:
+                prepare_neg_response(cm.RSP_SHIPS_PLACEMENT, client_id)
+        else:
+            prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
 
     def handle_request(self, msg_json):
         enc_json = json.loads(msg_json, encoding='utf-8')
@@ -141,6 +149,7 @@ class Session:
 
             elif req == cm.START_GAME:
                 resp = self.start_game(client_id, enc_json['data']['game_id'])
+                return resp
 
             elif req == cm.QUERY_SHOOT:
                 resp = self.shots_fired(client_id, enc_json['data'])
