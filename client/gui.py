@@ -443,12 +443,12 @@ class MainApplication(tk.Tk):
                         if msg['type'] != cm.RSP_OK:
                             tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
                         else:
-                            self.nickname = msg['data']['nick']  # TODO: vaata yle, mis key all veel on
+                            self.nickname = msg['data']['nick']
                             self.c.query_games()
                             self.state = "NO_GAMES"
                     elif self.state == "NO_GAMES":
                         if msg['type'] == cm.RSP_OK:
-                            self.games = msg['data'] # TODO: vaata yel, mis key all edasi on
+                            self.games = msg['data']
                             self.choose_game()
                         else:
                             print("Didn't get response from server about games.")
@@ -456,7 +456,9 @@ class MainApplication(tk.Tk):
                         if msg['type'] == cm.RSP_OK:
                             self.choose_grid.destroy()
                             self.state = "NO_SHIPS"
-                            self.init_board(msg['data'], self.nickname) # TODO: vaata yle, mis key all data on
+                            print self.nickname, msg['data']
+                            self.size = msg['data']['size']
+                            self.init_board(msg['data']['game_id'], self.nickname)
                             self.choose_ships()
                         else:
                             print("Couldn't choose your game. ")
