@@ -157,7 +157,7 @@ class Session:
 
             else:
                 print("No mans land")
-                return cm.RSP_NOT_IMPLEMENTED_YET
+                return prepare_neg_response(cm.RSP_NOT_IMPLEMENTED_YET, client_id)
         except KeyError:
             print("Request has much info, but no data, put everything in data.")
             return prepare_neg_response(req, client_id)
