@@ -146,7 +146,8 @@ class Session:
                 return resp
 
             elif req == cm.QUERY_PLACE_SHIPS:
-                pass
+                resp = self.place_ships(client_id, enc_json['data'])
+                return resp
 
             elif req == cm.START_GAME:
                 resp = self.start_game(client_id, enc_json['data']['game_id'])
