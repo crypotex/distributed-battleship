@@ -155,7 +155,7 @@ class Session:
 
 
 def prepare_response(clients, data=None):
-    if isinstance(clients, str):
+    if not isinstance(clients, list):
         clients = [clients]
     resp = {"type": cm.RSP_OK,
             "clients": clients, }
