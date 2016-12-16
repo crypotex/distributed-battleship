@@ -8,7 +8,6 @@ import sys
 import json
 
 from client_comms import Comm
-from client_comms import DEFAULT_SERVER_PORT
 from client_comms import query_servers
 import grid
 
@@ -156,7 +155,7 @@ class MainApplication(tk.Tk):
 
     def start_game(self, start_button):
         start_button.destroy()
-        self.c.query_start_game(self.game.game_id, self.nickname)
+        self.c.query_start_game(self.game.game_id)
 
     def change_names(self, opponents):
         j = 0
@@ -200,9 +199,9 @@ class MainApplication(tk.Tk):
 
         self.bind("<Return>", self.shoot)
 
-    def disable_grid(self, g):
+    @staticmethod
+    def disable_grid(g):
         for child in g.winfo_children():
-
             child.configure(state='disable')
 
     def destroy_shoot(self):
@@ -226,14 +225,14 @@ class MainApplication(tk.Tk):
 
         for key, val in coords.items():
             parts = val.split(",")
-            process_x = self.game._process_coords(parts[0].upper())
+            process_x = self.game.process_coords(parts[0].upper())
             if process_x[0]:
                 coords[key] = (int(process_x[1]), int(parts[1]))
             else:
                 tkMessageBox.showwarning("Warning", "No such coordinate exists.")
                 return
 
-        self.c.query_shoot(coords, self.nickname, self.game.game_id)
+        self.c.query_shoot(coords, self.game.game_id)
 
     def show_hits(self, msg):
         shots = msg['shots_fired']
@@ -283,7 +282,8 @@ class MainApplication(tk.Tk):
                         elif self.opp3_grid.label.cget('text') == player:
                             self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="firebrick")
 
-    def mark_hit_or_miss(self, v, opp_grid):
+    @staticmethod
+    def mark_hit_or_miss(v, opp_grid):
         if not v[-1]:
             opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="DodgerBlue3")
         else:
@@ -311,7 +311,7 @@ class MainApplication(tk.Tk):
         if "$" in nickname:
             tkMessageBox.showwarning("Warning", "Please don't use the dollar sign in nickname.")
         else:
-            self.c.query_nick(nickname, self.c.queue_name)
+            self.c.query_nick(nickname)
 
     def callback_game(self, event, games, b):
         if b <= len(games) - 1:
@@ -334,7 +334,7 @@ class MainApplication(tk.Tk):
             b = tk.Button(self.choose_grid, text="OK", command=lambda: self.ok(None, e))
             b.pack(pady=5, padx=5)
 
-            self.choose_grid.bind("<Return>", lambda event: self.ok(event, e))
+            self.choose_grid.bind("<Return>", lambda event2: self.ok(event2, e))
 
             self.wait_window(self.choose_grid)
 
@@ -347,7 +347,7 @@ class MainApplication(tk.Tk):
         if self.size and self.size.isdigit():
             self.size = int(self.size)
             self.state = "NO_YOUR_GAME"
-            self.c.create_game(self.nickname, self.size)
+            self.c.create_game(self.size)
 
             self.create_grids()
         else:
@@ -406,7 +406,7 @@ class MainApplication(tk.Tk):
             tkMessageBox.showwarning("Warning", "Ships didn't fit.")
             return
         else:
-            self.c.query_place_ships(self.nickname, self.game.game_id, process_ships)
+            self.c.query_place_ships(self.game.game_id, process_ships)
 
     def check_ships(self):
         msg = {}
@@ -433,30 +433,30 @@ class MainApplication(tk.Tk):
     def process_incoming(self):
         while self.queue.qsize():
             try:
-                msg = self.queue.get(0).split(cm.MSG_FIELD_SEP)
+                msg = json.loads(self.queue.get(0))
                 print self.state, msg
                 if self.state == "NO_CONN":
                     self.state = "NO_NICK"
-                elif len(msg) > 1 and (msg[1] == self.nickname or msg[2] == self.c.queue_name):
-                    #print self.state, str(msg)
+                elif len(msg) > 1 and self.c.queue_name in msg['clients']:
+                    # print self.state, str(msg)
                     if self.state == "NO_NICK":
-                        if msg[0] != cm.RSP_OK:
+                        if msg['type'] != cm.RSP_OK:
                             tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
                         else:
-                            self.nickname = msg[2]
-                            self.c.query_games(self.nickname)
+                            self.nickname = msg['data']  # TODO: vaata yle, mis key all veel on
+                            self.c.query_games()
                             self.state = "NO_GAMES"
-                    elif self.state == "NO_GAMES" and msg[1] == self.nickname:
-                        if msg[0] == cm.RSP_OK:
-                            self.games = json.loads(msg[2])
+                    elif self.state == "NO_GAMES":
+                        if msg['type'] == cm.RSP_OK:
+                            self.games = msg['data'] # TODO: vaata yel, mis key all edasi on
                             self.choose_game()
                         else:
                             print("Didn't get response from server about games.")
-                    elif self.state == "NO_YOUR_GAME" and msg[1] == self.nickname:
-                        if msg[0] == cm.RSP_OK:
+                    elif self.state == "NO_YOUR_GAME":
+                        if msg['type'] == cm.RSP_OK:
                             self.choose_grid.destroy()
                             self.state = "NO_SHIPS"
-                            self.init_board(msg[2], self.nickname)
+                            self.init_board(msg['data'], self.nickname) # TODO: vaata yle, mis key all data on
                             self.choose_ships()
                         else:
                             print("Couldn't choose your game. ")
@@ -464,12 +464,11 @@ class MainApplication(tk.Tk):
                             self.state = "NO_GAMES"
                             self.choose_game()
                     elif self.state == "NO_JOIN":
-                        if msg[0] == cm.RSP_MASTER_JOIN:
+                        if msg['type'] == cm.RSP_MULTI_OK:
                             self.state = "NO_SHIPS"
-                            data = json.loads(msg[1])
-                            self.size = int(data["size"])
+                            self.size = int(msg["data"]) # TODO: vaata üle, mis key all
                             self.opponents = json.loads(msg[2])
-                            self.init_board(self.games[self.joining_game_id], data["master"])
+                            self.init_board(self.games[self.joining_game_id], msg["data"]["master"])  # TODO: vaata yle, mis key all on
                             self.create_grids()
                             self.change_names(self.opponents)
                             self.update()
@@ -479,17 +478,16 @@ class MainApplication(tk.Tk):
                             self.state = "NO_GAMES"
                             self.choose_game()
                     elif self.state == "NO_SHIPS":
-                        if msg[0] == cm.RSP_OK:
+                        if msg['type'] == cm.RSP_OK:
                             self.ships = {}
-                            self.ships = json.loads(msg[2])
+                            self.ships = msg['data']['ships'] # TODO: vaata yle, mis key all on
                             self.create_grids()
-                            self.after(200, self.show_grids())
-                        elif msg[0] == cm.RSP_MASTER_JOIN:
-                            data = json.loads(msg[1])
+                            self.after(100, self.show_grids())
+                        elif msg['type'] == cm.RSP_MULTI_OK:
                             self.create_grids()
-                            self.opponents = json.loads(msg[2])
-                            if data["master"] == self.nickname:
-                                self.change_names(json.loads(msg[2]))
+                            self.opponents = msg['data']['opponents'] # TODO: vaata yle, mis key all
+                            if msg['data']['master'] == self.nickname: # TODO: vaata yle, mis key all
+                                self.change_names(msg['data']['new_client']) # TODO: vaata yle, mis key all
                                 self.update()
                             else:
                                 self.state = "NO_START_GAME"
@@ -499,16 +497,15 @@ class MainApplication(tk.Tk):
                             self.state = "NO_YOUR_GAME"
                             self.choose_ships()
                     elif self.state == "NO_START_GAME":
-                        if msg[0] == cm.RSP_MULTI_OK:
-                            self.opponents = eval(msg[1])
+                        if msg['type'] == cm.RSP_MULTI_OK:
+                            self.opponents = msg['data']['opponents'] # TODO: vaata yle, mis key all
                             self.change_names(self.opponents)
                             self.state = "START_GAME"
                             if self.game.master == self.nickname:
                                 self.shooting_frame(self.opponents)
-                        elif msg[0] == cm.RSP_MASTER_JOIN:
-                            resp = json.loads(msg[1])
-                            if resp["master"] == self.nickname:
-                                for name in json.loads(msg[2]):
+                        elif msg['type'] == cm.RSP_MASTER_JOIN:
+                            if msg['data']['master'] == self.nickname: # TODO: vaata key yle
+                                for name in msg['data']['opponents']: # TODO: vaata key yle
                                     if name not in self.opponents and name != self.nickname:
                                         self.opponents.append(name)
                                 self.change_names(self.opponents)
@@ -519,11 +516,11 @@ class MainApplication(tk.Tk):
                             tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
                             self.show_grids()
                     elif self.state == "START_GAME":
-                        if msg[0] == cm.RSP_MULTI_OK:
-                            extra = json.loads(msg[1])
-                            if self.nickname == extra["next"]:
+                        if msg['type'] == cm.RSP_MULTI_OK:
+                            extra = msg['data']
+                            if self.nickname == extra["next"]: # TODO: vaata key yle
                                 self.shooting_frame(self.opponents)
-                            if self.nickname == extra["origin"]:
+                            if self.nickname == extra["origin"]: # TODO: vaata key yle
                                 self.destroy_shoot()
                                 self.show_hits(extra)
                             else:

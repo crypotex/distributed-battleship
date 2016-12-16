@@ -29,7 +29,7 @@ class GameProtocol:
                     coords[1] = int(coords[1])
                 except ValueError:
                     return False
-                processing = self._process_coords(coords[0])
+                processing = self.process_coords(coords[0])
                 if processing[0]:
                     coords[0] = processing[1]
                 else:
@@ -71,7 +71,7 @@ class GameProtocol:
 
         return True
 
-    def _process_coords(self, y):
+    def process_coords(self, y):
         if ord(y) < 65 or ord(y) > 80:
             return False, -1
         else:

@@ -56,7 +56,8 @@ class Comm:
         self.queue_name = result2.method.queue
         self.from_server.queue_bind(exchange='out', queue=self.queue_name)
 
-        self.to_server.basic_publish(exchange='', routing_key='in', body=cm.MSG_FIELD_SEP.join([cm.QUERY_CONNECTION, self.queue_name]))
+        query_conn = self.prepare_response(cm.QUERY_CONNECTION, self.queue_name, {})
+        self.to_server.basic_publish(exchange='', routing_key='in', body=query_conn)
 
         self.periodic_call()
         self.thread1.start()
@@ -90,67 +91,62 @@ class Comm:
 
         self.from_server.basic_consume(self.callback, queue=self.queue_name, no_ack=True)
         self.from_server.start_consuming()
-        # print "blabla"
-        # try:
-        #     while self.running:
-        #         try:
-        #             #msg = self.sock.recv(DEFAULT_BUFFER_SIZE)
-        #             LOG.info("Sain serverilt: ")
-        #             #msg = self.from_server.start_consuming()
-        #             #self.queue.put(body)
-        #         except timeout:
-        #             # print("timeout")
-        #             pass
-        #
-        # except KeyboardInterrupt:
-        #     print("Exiting")
-        #     self.running = False
 
-    def query_nick(self, nick, queue):
-        self.to_server.basic_publish(exchange='', routing_key='in', body=cm.MSG_FIELD_SEP.join([cm.QUERY_NICK, nick, queue]))
+    @staticmethod
+    def prepare_response(request_type, client, data):
+        msg = {'type': request_type,
+               'client_id': client}
+        if len(data) > 0:
+            msg['data'] = data
+        return msg
+
+    def query_nick(self, nick):
+        msg = self.prepare_response(cm.QUERY_NICK, self.queue_name, {'nick': nick})
+        self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_NICK])
 
-    def query_place_ships(self, nick, game_id, ships):
+    def query_place_ships(self, game_id, ships):
         """
         Dictionary of Ships, where key is ship (Carrier, destroyer etc) and
         value is tuple of (int, int, bool), where first two are x and y for
         start location and boolean marks, if ship is placed horizontally
         or vertically
         :param ships: dictionary
+        :param game_id: game id
         :return: boolean, true if all ships placed correctly (no overlap), else false
         """
-        ship_dump = json.dumps(ships, encoding='utf-8')
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_PLACE_SHIPS, nick, game_id, ship_dump])
+        # ship_dump = json.dumps(ships, encoding='utf-8')
+        msg = self.prepare_response(cm.QUERY_PLACE_SHIPS, self.queue_name, {'game_id': game_id, 'ships': ships})
+        # msg = cm.MSG_FIELD_SEP.join([cm.QUERY_PLACE_SHIPS, nick, game_id, ship_dump])
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_PLACE_SHIPS])
 
-    def create_game(self, nick, game):
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_NEW_GAME, nick, str(game)])
+    def create_game(self, game_size):
+        msg = self.prepare_response(cm.QUERY_NEW_GAME, self.queue_name, {'size': game_size})
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_NEW_GAME])
 
-    def join_game(self, nick, chosen_game_id):
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_JOIN_GAME, nick, chosen_game_id])
+    def join_game(self, chosen_game_id):
+        msg = self.prepare_response(cm.QUERY_JOIN_GAME, self.queue_name, {'game_id': chosen_game_id})
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_JOIN_GAME])
 
-    def query_games(self, nick):
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_GAMES, nick])
+    def query_games(self):
+        msg = self.prepare_response(cm.QUERY_GAMES, self.queue_name, {})
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_GAMES])
 
-    def query_start_game(self, nick, game_id):
-        msg = cm.MSG_FIELD_SEP.join([cm.START_GAME, nick, game_id])
+    def query_start_game(self, game_id):
+        msg = self.prepare_response(cm.START_GAME, self.queue_name, {'game_id': game_id})
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.START_GAME])
 
-    def query_shoot(self, positions, nick, game_id):
+    def query_shoot(self, positions, game_id):
         # the positions should be dictionary nick: coordinate
-        result = {"nick": nick,
+        result = {"nick": self.queue_name,
                   "shots_fired": positions,
                   "game_id": game_id}
-        shooting_dump = json.dumps(result, encoding="utf-8")
-        msg = cm.MSG_FIELD_SEP.join([cm.QUERY_SHOOT, nick, shooting_dump])
+        msg = self.prepare_response(cm.QUERY_SHOOT, self.queue_name, result)
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
 
