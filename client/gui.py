@@ -156,6 +156,7 @@ class MainApplication(tk.Tk):
     def start_game(self, start_button):
         start_button.destroy()
         self.c.query_start_game(self.game.game_id)
+        self.state = "START_GAME"
 
     def change_names(self, opponents):
         j = 0
@@ -438,7 +439,6 @@ class MainApplication(tk.Tk):
                 if len(msg) > 1 and self.c.queue_name in msg['clients']:
                     if self.state == "NO_CONN":
                         self.state = "NO_NICK"
-                    # print self.state, str(msg)
                     elif self.state == "NO_NICK":
                         if msg['type'] != cm.RSP_OK:
                             tkMessageBox.showwarning("Warning", "Please choose another nickname to proceed!")
@@ -456,7 +456,6 @@ class MainApplication(tk.Tk):
                         if msg['type'] == cm.RSP_OK:
                             self.choose_grid.destroy()
                             self.state = "NO_SHIPS"
-                            print self.nickname, msg['data']
                             self.size = msg['data']['size']
                             self.init_board(msg['data']['game_id'], self.nickname)
                             self.choose_ships()
@@ -468,8 +467,8 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             self.state = "NO_SHIPS"
-                            self.size = int(msg["data"]) # TODO: vaata yle, mis key all
-                            self.opponents = json.loads(msg[2])
+                            self.size = msg['data']['size'] # TODO: vaata yle, mis key all
+                            self.opponents = msg['data']['opponents']
                             self.init_board(self.games[self.joining_game_id], msg["data"]["master"])  # TODO: vaata yle, mis key all on
                             self.create_grids()
                             self.change_names(self.opponents)
@@ -482,38 +481,36 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_SHIPS":
                         if msg['type'] == cm.RSP_OK:
                             self.ships = {}
-                            self.ships = msg['data']['ships'] # TODO: vaata yle, mis key all on
+                            self.ships = msg['data']
                             self.create_grids()
                             self.after(100, self.show_grids())
                         elif msg['type'] == cm.RSP_MULTI_OK:
                             self.create_grids()
                             self.opponents = msg['data']['opponents'] # TODO: vaata yle, mis key all
                             if msg['data']['master'] == self.nickname: # TODO: vaata yle, mis key all
-                                self.change_names(msg['data']['new_client']) # TODO: vaata yle, mis key all
+                                #self.change_names(msg['data']['new_client']) # TODO: vaata yle, mis key all
+                                print "Olen siin"
                                 self.update()
-                            else:
-                                self.state = "NO_START_GAME"
-                                self.choose_ships()
+                            #else:
+                                #self.state = "NO_START_GAME"
+                            #    self.choose_ships()
                         else:
                             print("Didn't position ships.")
                             self.state = "NO_YOUR_GAME"
                             self.choose_ships()
                     elif self.state == "NO_START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            self.opponents = msg['data']['opponents'] # TODO: vaata yle, mis key all
+                            self.opponents = msg['data']['opponents']
+                            if self.nickname != msg['data']['master']:
+                                self.create_grids()
+                            print "Tegelikult ma olen siin: ", self.opponents
                             self.change_names(self.opponents)
-                            self.state = "START_GAME"
-                            if self.game.master == self.nickname:
-                                self.shooting_frame(self.opponents)
-                        elif msg['type'] == cm.RSP_MASTER_JOIN:
-                            if msg['data']['master'] == self.nickname: # TODO: vaata key yle
-                                for name in msg['data']['opponents']: # TODO: vaata key yle
-                                    if name not in self.opponents and name != self.nickname:
-                                        self.opponents.append(name)
-                                self.change_names(self.opponents)
-                            else:
-                                self.state = "NO_YOUR_GAME"
-                                self.choose_ships()
+                            self.update()
+                        elif msg['type'] == cm.RSP_OK:
+                            #.opponents = msg['data']['opponents']
+                            if self.nickname != msg['data']['master']:
+                                self.create_grids()
+                            #self.change_names(self.opponents)
                         else:
                             tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
                             self.show_grids()
@@ -557,3 +554,5 @@ if __name__ == "__main__":
 # TODO: if only one player and he leaves, delete the game
 # TODO: if you leave (cancel the main gui window), remove your ships from the game
 # TODO: games page reloads after entering wrong grid size - maybe fix?
+# TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
+# TODO: if two are already waiting to start and a third player joins, master'g grid changes name, second player's don't

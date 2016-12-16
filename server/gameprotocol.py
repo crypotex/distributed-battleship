@@ -30,6 +30,7 @@ class GameProtocol:
             self.turn_list.append(client)
             result = {"size": self.size,
                       "master": self.master,
+                      "opponents": self.table.keys()
                       }
             return result
 

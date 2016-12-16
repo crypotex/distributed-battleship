@@ -87,7 +87,7 @@ class Session:
             resp = self.games[game_id].start_game()
             clients = self.get_client_id_by_nick(resp)
             if resp:
-                return prepare_response(clients, data={resp})
+                return prepare_response(clients, data={'opponents': resp})
             else:
                 return prepare_neg_response(cm.RSP_SHIPS_NOT_PLACED, client_id)
         else:
