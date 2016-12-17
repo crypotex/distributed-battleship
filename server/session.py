@@ -95,7 +95,7 @@ class Session:
 
     def shots_fired(self, client_id, shots_dict):
         game = self.games[shots_dict["game_id"]]
-        if game.check_client_turn(shots_dict["nick"]) and shots_dict["nick"] == self.reverse_clients[client_id]:
+        if game.check_client_turn(shots_dict["nick"]) and shots_dict["nick"] == self.clients[client_id]:
             resp = game.shoot_bombs(shots_dict['shots_fired'])
             if resp:
                 client_ids = self.get_client_id_by_nick(game.get_nicks())

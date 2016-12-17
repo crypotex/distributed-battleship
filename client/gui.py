@@ -233,7 +233,8 @@ class MainApplication(tk.Tk):
                 tkMessageBox.showwarning("Warning", "No such coordinate exists.")
                 return
 
-        self.c.query_shoot(coords, self.game.game_id)
+        self.c.query_shoot(self.nickname, coords, self.game.game_id)
+        self.state = "SHOOT"
 
     def show_hits(self, msg):
         shots = msg['shots_fired']
@@ -408,6 +409,7 @@ class MainApplication(tk.Tk):
             return
         else:
             self.c.query_place_ships(self.game.game_id, process_ships)
+            self.state = "NO_SHIPS"
 
     def check_ships(self):
         msg = {}
@@ -466,10 +468,10 @@ class MainApplication(tk.Tk):
                             self.choose_game()
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            self.state = "NO_SHIPS"
+                            #self.state = "NO_SHIPS"
                             self.size = msg['data']['size'] # TODO: vaata yle, mis key all
                             self.opponents = msg['data']['opponents']
-                            self.init_board(self.games[self.joining_game_id], msg["data"]["master"])  # TODO: vaata yle, mis key all on
+                            self.init_board(self.games[self.joining_game_id], msg["data"]["master"])
                             self.create_grids()
                             self.change_names(self.opponents)
                             self.update()
@@ -486,12 +488,14 @@ class MainApplication(tk.Tk):
                             self.after(100, self.show_grids())
                         elif msg['type'] == cm.RSP_MULTI_OK:
                             self.create_grids()
-                            self.opponents = msg['data']['opponents'] # TODO: vaata yle, mis key all
-                            if msg['data']['master'] == self.nickname: # TODO: vaata yle, mis key all
-                                #self.change_names(msg['data']['new_client']) # TODO: vaata yle, mis key all
+                            self.opponents = msg['data']['opponents']
+                            if msg['data']['master'] == self.nickname:
+                                self.change_names(self.opponents)
                                 print "Olen siin"
                                 self.update()
-                            #else:
+                            else:
+                                self.game.master = msg['data']['master']
+                                #self.state = "NO_START_GAME"
                                 #self.state = "NO_START_GAME"
                             #    self.choose_ships()
                         else:
@@ -501,14 +505,15 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             self.opponents = msg['data']['opponents']
-                            if self.nickname != msg['data']['master']:
+                            if self.nickname != self.game.master:
                                 self.create_grids()
+                                self.state = "START_GAME"
                             print "Tegelikult ma olen siin: ", self.opponents
                             self.change_names(self.opponents)
                             self.update()
                         elif msg['type'] == cm.RSP_OK:
                             #.opponents = msg['data']['opponents']
-                            if self.nickname != msg['data']['master']:
+                            if self.nickname != self.game.master:
                                 self.create_grids()
                             #self.change_names(self.opponents)
                         else:
@@ -516,18 +521,33 @@ class MainApplication(tk.Tk):
                             self.show_grids()
                     elif self.state == "START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            extra = msg['data']
-                            if self.nickname == extra["next"]: # TODO: vaata key yle
+                            for opponent in msg['data']['opponents']:
+                                if opponent not in self.opponents:
+                                    self.opponents.append(opponent)
+                            if self.game.master == self.nickname:
                                 self.shooting_frame(self.opponents)
-                            if self.nickname == extra["origin"]: # TODO: vaata key yle
-                                self.destroy_shoot()
-                                self.show_hits(extra)
                             else:
-                                self.show_hits(extra)
+                                tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
+                                self.state = "SHOOT"
+                        else:
+                            print("Something went wrong when starting the game.")
+                            tkMessageBox.showwarning("Warning", "Please wait for other opponents.")
+                            self.state = "NO_START_GAME"
+                            self.show_grids()
+                    elif self.state == "SHOOT":
+                        if msg['type'] == cm.RSP_MULTI_OK:
+                            extra = msg['data']
+                            self.show_hits(extra)
+                            if self.nickname == extra["next"]:
+                                self.shooting_frame(self.opponents)
+                            if self.nickname == extra["origin"]:
+                                self.destroy_shoot()
+                                self.update()
                         else:
                             print("Something went wrong from getting shots fired.")
                 else:
                     print msg
+                print "P2rast olen selline: ", self.state
 
             except Queue.Empty:
                 pass
@@ -555,4 +575,5 @@ if __name__ == "__main__":
 # TODO: if you leave (cancel the main gui window), remove your ships from the game
 # TODO: games page reloads after entering wrong grid size - maybe fix?
 # TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
-# TODO: if two are already waiting to start and a third player joins, master'g grid changes name, second player's don't
+# TODO: if coordinates can't be split, then show error. Otherwise it just crashes
+# TODO: if game starts, second player doesn't see third players name. Third player and master see everybody's name

@@ -141,9 +141,9 @@ class Comm:
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.START_GAME])
 
-    def query_shoot(self, positions, game_id):
+    def query_shoot(self, nick, positions, game_id):
         # the positions should be dictionary nick: coordinate
-        result = {"nick": self.queue_name,
+        result = {"nick": nick,
                   "shots_fired": positions,
                   "game_id": game_id}
         msg = self.prepare_response(cm.QUERY_SHOOT, self.queue_name, result)

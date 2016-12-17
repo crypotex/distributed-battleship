@@ -41,7 +41,7 @@ class Server:
 
         self.from_server = self.connection.channel()
         #result = self.from_server.queue_declare(queue='out')
-        self.from_server.exchange_declare(exchange='multi_out', type='fanout')
+        self.from_server.exchange_declare(exchange='out', type='direct')
 
         #self.from_server.queue_bind(exchange='out', queue=result.method.queue)
 
