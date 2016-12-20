@@ -251,6 +251,7 @@ class MainApplication(tk.Tk):
                     self.mark_hit_or_miss(v, self.opp3_grid)
             elif self.nickname == player and v[-1]:
                 self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[v[0], v[1]], fill="firebrick")
+                self.my_grid.update()
                 self.shooter = tk.Label(self, text="You got hit by %s!" % origin, fg="firebrick",
                                         font=("Helvetica", 14, "bold"), padx=10, pady=10)
                 self.shooter.grid(row=9, columnspan=4)
@@ -457,9 +458,10 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_YOUR_GAME":
                         if msg['type'] == cm.RSP_OK:
                             self.choose_grid.destroy()
-                            self.state = "NO_SHIPS"
+                            #self.state = "NO_SHIPS"
                             self.size = msg['data']['size']
                             self.init_board(msg['data']['game_id'], self.nickname)
+                            self.create_grids()
                             self.choose_ships()
                         else:
                             print("Couldn't choose your game. ")
@@ -469,7 +471,7 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             #self.state = "NO_SHIPS"
-                            self.size = msg['data']['size'] # TODO: vaata yle, mis key all
+                            self.size = msg['data']['size']
                             self.opponents = msg['data']['opponents']
                             self.init_board(self.games[self.joining_game_id], msg["data"]["master"])
                             self.create_grids()
@@ -484,10 +486,10 @@ class MainApplication(tk.Tk):
                         if msg['type'] == cm.RSP_OK:
                             self.ships = {}
                             self.ships = msg['data']
-                            self.create_grids()
+                            #self.create_grids()
                             self.after(100, self.show_grids())
                         elif msg['type'] == cm.RSP_MULTI_OK:
-                            self.create_grids()
+                            #self.create_grids()
                             self.opponents = msg['data']['opponents']
                             if msg['data']['master'] == self.nickname:
                                 self.change_names(self.opponents)
@@ -504,13 +506,18 @@ class MainApplication(tk.Tk):
                             self.choose_ships()
                     elif self.state == "NO_START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            self.opponents = msg['data']['opponents']
-                            if self.nickname != self.game.master:
+                            # if self.nickname != self.game.master:
+                            #     self.create_grids()
+                            #     #self.state = "START_GAME"
+                            if msg['data']['type'] == "join":
+                                self.opponents = msg['data']['opponents']
                                 self.create_grids()
-                                self.state = "START_GAME"
-                            print "Tegelikult ma olen siin: ", self.opponents
-                            self.change_names(self.opponents)
-                            self.update()
+                                self.change_names(self.opponents)
+                                self.update_idletasks()
+                                print "Opponents: ", self.opponents, ", labels: ", self.labels[0].cget("text"), ", ", self.labels[1].cget("text")
+                            else:
+                                tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
+                                self.state = "SHOOT"
                         elif msg['type'] == cm.RSP_OK:
                             #.opponents = msg['data']['opponents']
                             if self.nickname != self.game.master:
@@ -521,7 +528,7 @@ class MainApplication(tk.Tk):
                             self.show_grids()
                     elif self.state == "START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            for opponent in msg['data']['opponents']:
+                            for opponent in msg['data']['nicks']:
                                 if opponent not in self.opponents:
                                     self.opponents.append(opponent)
                             if self.game.master == self.nickname:
@@ -547,7 +554,6 @@ class MainApplication(tk.Tk):
                             print("Something went wrong from getting shots fired.")
                 else:
                     print msg
-                print "P2rast olen selline: ", self.state
 
             except Queue.Empty:
                 pass

@@ -75,6 +75,7 @@ class Session:
                 resp = self.games[game_id].user_join_game(client_nick)
                 if resp:
                     clients = self.get_client_id_by_nick(resp["master"]) + [client_id]
+                    resp['type'] = "join"
                     return prepare_response(clients, data=resp)
                 else:
                     return prepare_neg_response(cm.RSP_NOT_IMPLEMENTED_YET, client_id)
@@ -87,7 +88,7 @@ class Session:
             resp = self.games[game_id].start_game()
             clients = self.get_client_id_by_nick(resp)
             if resp:
-                return prepare_response(clients, data={'opponents': resp})
+                return prepare_response(clients, data={"nicks": resp, 'type': "Start"})
             else:
                 return prepare_neg_response(cm.RSP_SHIPS_NOT_PLACED, client_id)
         else:
