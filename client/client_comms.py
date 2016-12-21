@@ -80,6 +80,8 @@ class Comm:
 
     def stop_the_thread_please(self):
         self.running = False
+        resp = self.prepare_response(cm.DISCONNECT, self.queue_name_connection, [])
+        self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
 
     def periodic_call(self):
         """
@@ -99,8 +101,10 @@ class Comm:
         self.from_server.start_consuming()
 
     def keepalive_thread(self):
+        resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name_connection, {'client': self.queue_name})
+        self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
         while True:
-            resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name, {'alive_queue': self.queue_name_connection})
+            resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name_connection, [])
             self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
             LOG.info("Sent keep-alive to server: %s" % resp)
             time.sleep(3.0 - ((time.time() - self.start_time) % 3.0))
@@ -112,8 +116,6 @@ class Comm:
 
     def connection_callback(self, ch, method, properties, body):
         print body
-
-
 
     @staticmethod
     def prepare_response(request_type, client, data):
