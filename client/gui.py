@@ -355,6 +355,7 @@ class MainApplication(tk.Tk):
         else:
             tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
             self.choose_grid.lift()
+            return
 
     def choose_ships(self):
         self.clear()
@@ -468,7 +469,6 @@ class MainApplication(tk.Tk):
                             print("Couldn't choose your game. ")
                             tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
                             self.state = "NO_GAMES"
-                            self.choose_game()
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             self.size = msg['data']['size']
@@ -563,10 +563,7 @@ if __name__ == "__main__":
 # TODO: when you lost -> possibility to leave OR possibility for spectator mode
 # TODO: if master leaves, random new master
 # TODO: if only one player and he leaves, delete the game
-# TODO: if you leave (cancel the main gui window), remove your ships from the game
-# TODO: games page reloads after entering wrong grid size - maybe fix?
+# TODO: if you leave (from the button), remove your ships from the game
 # TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
-# TODO: if coordinates can't be split, then show error. Otherwise it just crashes
-
 
 # TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud

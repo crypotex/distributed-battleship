@@ -24,11 +24,16 @@ class GameProtocol:
             return False
         else:
             for ship, params in ships.items():
-                coords = params[0].split(",")
-                try:
-                    coords[1] = int(coords[1])
-                except ValueError:
+                if "," not in params[0]:
+                    self.table[self.client_nick] = [[0 for _ in range(self.size)] for i in range(self.size)]
                     return False
+                else:
+                    try:
+                        coords = params[0].split(",")
+                        coords[1] = int(coords[1])
+                    except ValueError:
+                        self.table[self.client_nick] = [[0 for _ in range(self.size)] for i in range(self.size)]
+                        return False
                 processing = self.process_coords(coords[0])
                 if processing[0]:
                     coords[0] = processing[1]
