@@ -312,9 +312,6 @@ class MainApplication(tk.Tk):
         if len(nickname) < 4 or len(nickname) > 28:
             tkMessageBox.showwarning("Warning", "Length should be between 4-28.")
             return
-        if "$" in nickname:
-            tkMessageBox.showwarning("Warning", "Please don't use the dollar sign in nickname.")
-            return
         else:
             self.c.query_nick(nickname)
 
@@ -467,11 +464,6 @@ class MainApplication(tk.Tk):
                                 self.choose_ships()
                             else:
                                 self.opponents = msg['data']['opponents']
-                        elif msg['type'] == cm.RSP_MULTI_OK:
-
-                            self.size = msg['data']['size']
-                            self.init_board(msg['data']['game_id'], self.nickname)
-                            self.create_grids()
                         else:
                             print("Couldn't choose your game. ")
                             tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
@@ -479,7 +471,6 @@ class MainApplication(tk.Tk):
                             self.choose_game()
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            #self.state = "NO_SHIPS"
                             self.size = msg['data']['size']
                             self.opponents = msg['data']['opponents']
                             self.init_board(self.games[self.joining_game_id], msg["data"]["master"])
@@ -495,10 +486,8 @@ class MainApplication(tk.Tk):
                         if msg['type'] == cm.RSP_OK:
                             self.ships = {}
                             self.ships = msg['data']
-                            #self.create_grids()
                             self.after(100, self.show_grids())
                         elif msg['type'] == cm.RSP_MULTI_OK:
-                            #self.create_grids()
                             self.opponents = msg['data']['opponents']
                             if msg['data']['master'] == self.nickname:
                                 self.change_names(self.opponents)
@@ -506,32 +495,24 @@ class MainApplication(tk.Tk):
                                 self.update()
                             else:
                                 self.game.master = msg['data']['master']
-                                #self.state = "NO_START_GAME"
-                                #self.state = "NO_START_GAME"
-                            #    self.choose_ships()
                         else:
                             print("Didn't position ships.")
                             self.state = "NO_YOUR_GAME"
                             self.choose_ships()
                     elif self.state == "NO_START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            # if self.nickname != self.game.master:
-                            #     self.create_grids()
-                            #     #self.state = "START_GAME"
                             if msg['data']['type'] == "join":
                                 self.opponents = msg['data']['opponents']
-                                #self.create_grids()
                                 self.change_names(self.opponents)
                                 self.update_idletasks()
-                                print "Opponents: ", self.opponents, ", labels: ", self.labels[0].cget("text"), ", ", self.labels[1].cget("text")
+                                print "Opponents: ", self.opponents, ", labels: ", self.labels[0].cget("text"), ", ", \
+                                self.labels[1].cget("text")
                             else:
                                 tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
                                 self.state = "SHOOT"
                         elif msg['type'] == cm.RSP_OK:
-                            #.opponents = msg['data']['opponents']
                             if self.nickname != self.game.master:
                                 self.create_grids()
-                            #self.change_names(self.opponents)
                         else:
                             tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
                             self.show_grids()
@@ -578,19 +559,18 @@ if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
 
-
     # Close socket when client closes window
     # app.c.sock.close()
     # TODO: close the script somehow?
 
-# TODO: master cannot start game before all the opponents have placed ships
-# TODO: when you lost -> possibility to leave OR possibility for spectator mode
-# TODO: if master leaves, random new master
-# TODO: if only one player and he leaves, delete the game
-# TODO: if you leave (cancel the main gui window), remove your ships from the game
-# TODO: games page reloads after entering wrong grid size - maybe fix?
-# TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
-# TODO: if coordinates can't be split, then show error. Otherwise it just crashes
+    # TODO: master cannot start game before all the opponents have placed ships
+    # TODO: when you lost -> possibility to leave OR possibility for spectator mode
+    # TODO: if master leaves, random new master
+    # TODO: if only one player and he leaves, delete the game
+    # TODO: if you leave (cancel the main gui window), remove your ships from the game
+    # TODO: games page reloads after entering wrong grid size - maybe fix?
+    # TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
+    # TODO: if coordinates can't be split, then show error. Otherwise it just crashes
 
 
-# TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud
+    # TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud
