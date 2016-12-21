@@ -43,6 +43,11 @@ class Comm:
         self.thread2 = threading.Thread(target=self.keepalive_thread)
         self.thread3 = threading.Thread(target=self.connection_thread)
 
+        # Python program exits when only "daemonic" threads are left
+        self.thread1.daemon = True
+        self.thread2.daemon = True
+        self.thread3.daemon = True
+
     def connect_to_server(self, server_addr):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_addr))
 

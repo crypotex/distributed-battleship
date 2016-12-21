@@ -559,10 +559,6 @@ if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
 
-    # Close socket when client closes window
-    # app.c.sock.close()
-    # TODO: close the script somehow?
-
 # TODO: master cannot start game before all the opponents have placed ships
 # TODO: when you lost -> possibility to leave OR possibility for spectator mode
 # TODO: if master leaves, random new master
