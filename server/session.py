@@ -76,6 +76,7 @@ class Session:
                 if resp:
                     clients = self.get_client_id_by_nick(resp["master"]) + [client_id]
                     resp['type'] = "join"
+                    resp['game_id'] = game_id
                     return prepare_response(clients, data=resp)
                 else:
                     return prepare_neg_response(cm.RSP_NOT_IMPLEMENTED_YET, client_id)

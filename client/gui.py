@@ -311,8 +311,10 @@ class MainApplication(tk.Tk):
     def callback_nickname(self, event, nickname):
         if len(nickname) < 4 or len(nickname) > 28:
             tkMessageBox.showwarning("Warning", "Length should be between 4-28.")
+            return
         if "$" in nickname:
             tkMessageBox.showwarning("Warning", "Please don't use the dollar sign in nickname.")
+            return
         else:
             self.c.query_nick(nickname)
 
@@ -456,13 +458,20 @@ class MainApplication(tk.Tk):
                         else:
                             print("Didn't get response from server about games.")
                     elif self.state == "NO_YOUR_GAME":
-                        if msg['type'] == cm.RSP_OK:
-                            self.choose_grid.destroy()
-                            #self.state = "NO_SHIPS"
+                        if msg['type'] == cm.RSP_OK or msg['type'] == cm.RSP_MULTI_OK:
                             self.size = msg['data']['size']
                             self.init_board(msg['data']['game_id'], self.nickname)
                             self.create_grids()
-                            self.choose_ships()
+                            if msg['type'] == cm.RSP_OK:
+                                self.choose_grid.destroy()
+                                self.choose_ships()
+                            else:
+                                self.opponents = msg['data']['opponents']
+                        elif msg['type'] == cm.RSP_MULTI_OK:
+
+                            self.size = msg['data']['size']
+                            self.init_board(msg['data']['game_id'], self.nickname)
+                            self.create_grids()
                         else:
                             print("Couldn't choose your game. ")
                             tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
@@ -582,9 +591,6 @@ if __name__ == "__main__":
 # TODO: games page reloads after entering wrong grid size - maybe fix?
 # TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
 # TODO: if coordinates can't be split, then show error. Otherwise it just crashes
-# TODO: if game starts, second player doesn't see third players name. Third player and master see everybody's name
 
-# TODO: tyhja nimega saab edasi minna praegu. annab hoitause ette, aga kinni panna, siis l2heb edasi
-# TODO: m6nel ei n2ita v2rve, kui pihta saab
+
 # TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud
-# TODO: Kui m6ni player liitub m2nguga, kui masteril pole laevad paigas, siis saab error akna: Grid size should be 5-15. Ja selle peale viskab m2ngu loomise aknasse tagasi (seal kus on mullike New Game)
