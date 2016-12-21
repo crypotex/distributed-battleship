@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 import pika
+import time
 
 try:
     import common as cm
@@ -46,6 +47,8 @@ class Comm:
 
         self.to_server = connection.channel()
         self.to_server.queue_declare(queue='in')
+        self.to_server_alive = connection.channel()
+        self.to_server_alive.queue_declare(queue='alive_in')
 
         # self.from_server_multi = connection.channel()
         # result = self.from_server_multi.queue_declare()
@@ -62,6 +65,8 @@ class Comm:
 
         self.periodic_call()
         self.thread1.start()
+
+        self.start_time = time.time()
         self.thread2.start()
 
     def callback(self, ch, method, properties, body):
@@ -88,7 +93,12 @@ class Comm:
         self.from_server.start_consuming()
 
     def keepalive_thread(self):
-        pass
+        while True:
+            resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name, [])
+            self.to_server.basic_publish(exchange='', routing_key='alive_in', body=resp)
+            time.sleep(3.0 - ((time.time() - self.start_time) % 3.0))
+            LOG.info("Sent keep-alive to server: %s" % resp)
+
 
     @staticmethod
     def prepare_response(request_type, client, data):
