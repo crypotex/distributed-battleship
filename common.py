@@ -77,3 +77,4 @@ ERR_MSGS[RSP_NOT_IMPLEMENTED_YET] = "Unimplemented functionality"
 # Alive messages -----------------------------------------------------------------
 KEEP_ALIVE = '1001'
 DISCONNECT = '1002'
+SERVER_SHUTDOWN = '1010'

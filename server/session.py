@@ -18,6 +18,7 @@ __author__ = "Andre"
 class Session:
     def __init__(self):
         self.clients = {}
+        self.clients_alive = {}
         self.reverse_clients = {}
         self.games = {}
 
