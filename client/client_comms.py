@@ -39,6 +39,7 @@ class Comm:
         self.running = True
 
         self.thread1 = threading.Thread(target=self.worker_thread)
+        self.thread2 = threading.Thread(target=self.keepalive_thread)
 
     def connect_to_server(self, server_addr):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_addr))
@@ -61,6 +62,7 @@ class Comm:
 
         self.periodic_call()
         self.thread1.start()
+        self.thread2.start()
 
     def callback(self, ch, method, properties, body):
         self.queue.put(body)
@@ -82,15 +84,11 @@ class Comm:
             self.gui.after(100, self.periodic_call)
 
     def worker_thread(self):
-        """
-        This is where we handle the asynchronous I/O. For example, it may be
-        a 'select()'.
-        One important thing to remember is that the thread has to yield
-        control.
-        """
-
         self.from_server.basic_consume(self.callback, queue=self.queue_name, no_ack=True)
         self.from_server.start_consuming()
+
+    def keepalive_thread(self):
+        pass
 
     @staticmethod
     def prepare_response(request_type, client, data):

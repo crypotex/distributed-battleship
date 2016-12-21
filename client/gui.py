@@ -164,7 +164,7 @@ class MainApplication(tk.Tk):
             if opponents[i] != self.nickname:
                 self.labels[j].config(text=opponents[i])
                 j += 1
-        self.update()
+        self.update_idletasks()
 
     def shooting_frame(self, opponents):
         w1 = tk.Frame(self)
@@ -511,7 +511,7 @@ class MainApplication(tk.Tk):
                             #     #self.state = "START_GAME"
                             if msg['data']['type'] == "join":
                                 self.opponents = msg['data']['opponents']
-                                self.create_grids()
+                                #self.create_grids()
                                 self.change_names(self.opponents)
                                 self.update_idletasks()
                                 print "Opponents: ", self.opponents, ", labels: ", self.labels[0].cget("text"), ", ", self.labels[1].cget("text")
@@ -583,3 +583,8 @@ if __name__ == "__main__":
 # TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
 # TODO: if coordinates can't be split, then show error. Otherwise it just crashes
 # TODO: if game starts, second player doesn't see third players name. Third player and master see everybody's name
+
+# TODO: tyhja nimega saab edasi minna praegu. annab hoitause ette, aga kinni panna, siis l2heb edasi
+# TODO: m6nel ei n2ita v2rve, kui pihta saab
+# TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud
+# TODO: Kui m6ni player liitub m2nguga, kui masteril pole laevad paigas, siis saab error akna: Grid size should be 5-15. Ja selle peale viskab m2ngu loomise aknasse tagasi (seal kus on mullike New Game)
