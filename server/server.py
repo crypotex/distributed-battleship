@@ -59,6 +59,11 @@ class Server:
             self.to_server.start_consuming()
         except KeyboardInterrupt:
             self.send_shutdown_msg()
+            self.to_server.stop_consuming()
+        time.sleep(5)
+        print("filnalry")
+
+        self.connection.close()
 
 
     def process_message(self, ch, method, properties, body):
@@ -72,11 +77,14 @@ class Server:
                 LOG.info("Sent response to %s, msg was: %s." % (client, enc_resp))
 
     def connection_thread(self):
+        self.to_server_connection.basic_consume(self.process_alive_queue_msg, queue="alive_in", no_ack=True)
         try:
-            self.to_server_connection.basic_consume(self.process_alive_queue_msg, queue="alive_in", no_ack=True)
             self.to_server_connection.start_consuming()
         except KeyboardInterrupt:
-            self.send_shutdown_msg()
+            print("kfwvwrbwrbrwbwr")
+            self.to_server_connection.stop_consuming()
+            print("FAfegwegwrgwrgwr")
+
 
     def process_alive_queue_msg(self, ch, method, properties, body):
         enc_data = json.loads(body, encoding='utf-8')
