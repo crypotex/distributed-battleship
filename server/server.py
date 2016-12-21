@@ -80,8 +80,8 @@ class Server:
 
     def process_alive_queue_msg(self, ch, method, properties, body):
         enc_data = json.loads(body, encoding='utf-8')
+        cl_id = enc_data['client_id']
         if enc_data['type'] == cm.KEEP_ALIVE:
-            cl_id = enc_data['client_id']
             try:
                 if cl_id in self.session.clients_alive:
                     self.session.clients_alive[cl_id]['timestamp'] = time.time()
@@ -90,6 +90,11 @@ class Server:
                     self.session.clients_alive[cl_id] = {'q': enc_data['data']['client'], 'timestamp': time.time()}
             except KeyError:
                 LOG.error("Something went wrong, should investigate process_alive_queue_msg, msg was %s. " % body)
+        elif enc_data['type'] == cm.DISCONNECT:
+            # Do whatever you do when disconnecting ... Not sure yet
+            LOG.info("Client %s disconnected. Implement the disconnecting thingy..." % str(cl_id))
+        else:
+            LOG.info("Unimplemented alive queue msg type: %s. " % enc_data['type'])
 
     def send_shutdown_msg(self):
         LOG.info("Shutting down server.")
