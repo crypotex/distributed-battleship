@@ -563,14 +563,14 @@ if __name__ == "__main__":
     # app.c.sock.close()
     # TODO: close the script somehow?
 
-    # TODO: master cannot start game before all the opponents have placed ships
-    # TODO: when you lost -> possibility to leave OR possibility for spectator mode
-    # TODO: if master leaves, random new master
-    # TODO: if only one player and he leaves, delete the game
-    # TODO: if you leave (cancel the main gui window), remove your ships from the game
-    # TODO: games page reloads after entering wrong grid size - maybe fix?
-    # TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
-    # TODO: if coordinates can't be split, then show error. Otherwise it just crashes
+# TODO: master cannot start game before all the opponents have placed ships
+# TODO: when you lost -> possibility to leave OR possibility for spectator mode
+# TODO: if master leaves, random new master
+# TODO: if only one player and he leaves, delete the game
+# TODO: if you leave (cancel the main gui window), remove your ships from the game
+# TODO: games page reloads after entering wrong grid size - maybe fix?
+# TODO: if some opponent leaves before game starts, remove him/her from the opponents list (server-side) and update the grid names in gui
+# TODO: if coordinates can't be split, then show error. Otherwise it just crashes
 
 
-    # TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud
+# TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud

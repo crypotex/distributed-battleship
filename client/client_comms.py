@@ -41,24 +41,25 @@ class Comm:
 
         self.thread1 = threading.Thread(target=self.worker_thread)
         self.thread2 = threading.Thread(target=self.keepalive_thread)
+        self.thread3 = threading.Thread(target=self.connection_thread)
 
     def connect_to_server(self, server_addr):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_addr))
 
         self.to_server = connection.channel()
         self.to_server.queue_declare(queue='in')
-        self.to_server_alive = connection.channel()
-        self.to_server_alive.queue_declare(queue='alive_in')
-
-        # self.from_server_multi = connection.channel()
-        # result = self.from_server_multi.queue_declare()
-        # queue_name = result.method.queue
-        # self.from_server_multi.queue_bind(exchange='multi_out', queue=queue_name)
+        self.to_server_connection = connection.channel()
+        self.to_server_connection.queue_declare(queue='alive_in')
 
         self.from_server = connection.channel()
-        result2 = self.from_server.queue_declare()
-        self.queue_name = result2.method.queue
+        result = self.from_server.queue_declare()
+        self.queue_name = result.method.queue
         self.from_server.queue_bind(exchange='out', queue=self.queue_name)
+
+        self.from_server_connection = connection.channel()
+        result2 = self.from_server_connection.queue_declare()
+        self.queue_name_connection = result2.method.queue
+        self.from_server_connection.queue_bind(exchange='alive_out', queue=self.queue_name_connection)
 
         query_conn = self.prepare_response(cm.QUERY_CONNECTION, self.queue_name, {})
         self.to_server.basic_publish(exchange='', routing_key='in', body=query_conn)
@@ -94,10 +95,19 @@ class Comm:
 
     def keepalive_thread(self):
         while True:
-            resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name, [])
-            self.to_server.basic_publish(exchange='', routing_key='alive_in', body=resp)
-            time.sleep(3.0 - ((time.time() - self.start_time) % 3.0))
+            resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name, {'alive_queue': self.queue_name_connection})
+            self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
             LOG.info("Sent keep-alive to server: %s" % resp)
+            time.sleep(3.0 - ((time.time() - self.start_time) % 3.0))
+
+    def connection_thread(self):
+        self.from_server_connection.basic_consume(self.connection_callback, queue=self.queue_name_connection,
+                                                  no_ack=True)
+        self.from_server_connection.start_consuming()
+
+    def connection_callback(self, ch, method, properties, body):
+        print body
+
 
 
     @staticmethod
