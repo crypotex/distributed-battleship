@@ -198,7 +198,19 @@ class MainApplication(tk.Tk):
         self.shoot_button.grid(row=8, columnspan=2)
         self.shoot_button.grid(row=7, columnspan=2, pady=(15, 0))
 
+        self.leave_button = tk.Button(self, text="Leave game", command=lambda: self.leave_game(), padx=20, pady=10)
+        self.leave_button.grid(row=8, columnspan=2, pady=(3, 0))
+
         self.bind("<Return>", self.shoot)
+
+    def leave_game(self):
+        response = tkMessageBox.askquestion("Warning", "Are you sure you want to leave? Your ships will be removed.")
+        if response == "yes":
+            # TODO: Eemalda m2ngija, saada ta tagasi m2ngude valikusse vms
+            # TODO: Kui lahkus master siis vaja uus valida p2rast
+            return
+        else:
+            return
 
     @staticmethod
     def disable_grid(g):
@@ -468,6 +480,7 @@ class MainApplication(tk.Tk):
                         else:
                             print("Couldn't choose your game. ")
                             tkMessageBox.showwarning("Warning", "Grid size should be 5-15.")
+                            self.choose_grid.lift()
                             self.state = "NO_GAMES"
                     elif self.state == "NO_JOIN":
                         if msg['type'] == cm.RSP_MULTI_OK:
