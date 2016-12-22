@@ -279,11 +279,12 @@ class MainApplication(tk.Tk):
         for player, ship in lost_ships.items():
             # SIIN M2RGIB 2RA SINU OMA LAEVA ASUKOHA PUNASEKS, KUI TEISE SELLINE LAEV L2KS JUST P6HJA. FIX IT!!
             # SAMUTI EI N2ITA, KELLE LAEV JUST P6HJA L2KS
+            # MIGHT BE FIXED I THINK
+            ship_type = ship[0]
             if self.nickname != player:
-                ship_size = self.game.identifier.get(ship)[1]
-                x = self.ships.get(ship)[0]
-                y = self.ships.get(ship)[1]
-                direction = self.ships.get(ship)[-1]
+                ship_size = self.game.identifier.get(ship_type)[1]
+                x, y = ship[1][0], ship[1][1]
+                direction = ship[1][-1]
 
                 if direction:
                     for i in range(ship_size):
@@ -301,6 +302,11 @@ class MainApplication(tk.Tk):
                             self.opp2_grid.gridp.itemconfig(self.opp2_grid.gridp.rect[x + i, y], fill="firebrick")
                         elif self.opp3_grid.label.cget('text') == player:
                             self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="firebrick")
+
+            self.titanic = tk.Label(self, text="%s's %s has been destroyed! Bummer :(" % (player, ship_type), fg="firebrick",
+                                    font=("Helvetica", 14, "bold"), padx=10, pady=10)
+            self.titanic.grid(row=9, columnspan=4)
+            self.titanic.after(3500, self.titanic.destroy)
 
     @staticmethod
     def mark_hit_or_miss(v, opp_grid):
@@ -524,7 +530,7 @@ class MainApplication(tk.Tk):
                                 self.change_names(self.opponents)
                                 self.update_idletasks()
                                 print "Opponents: ", self.opponents, ", labels: ", self.labels[0].cget("text"), ", ", \
-                                self.labels[1].cget("text")
+                                    self.labels[1].cget("text")
                             else:
                                 tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
                                 self.state = "SHOOT"

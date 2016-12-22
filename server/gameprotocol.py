@@ -97,7 +97,7 @@ class GameProtocol:
                         self.table[nick][t_x][t_y] = self.im_hit_im_hit
                         if all(i != ship_id for i in chain(*self.table[nick])):
                             tmp_ship_type = self.reverse_identifier[ship_id]
-                            tmp_dead_ship = self.alive_ships[nick].pop(tmp_ship_type)
+                            tmp_dead_ship = (tmp_ship_type, self.alive_ships[nick].pop(tmp_ship_type))
                             she_dead[nick] = tmp_dead_ship
                         # if all(i < 4 for i in chain(*self.table[nick])):
                         #    self.lost_list.append(nick)
