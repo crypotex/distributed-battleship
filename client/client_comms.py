@@ -175,6 +175,10 @@ class Comm:
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_SHOOT])
 
+    def query_leave(self, game_id):
+        msg = self.prepare_response(cm.QUERY_LEAVE, self.queue_name, {'game_id': game_id})
+        self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+
 
 def query_servers():
     # Just a placeholder for now ...

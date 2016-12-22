@@ -119,6 +119,10 @@ class Session:
         else:
             prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
 
+    def leave_game(self, client_id, data):
+        pass
+
+
     def handle_request(self, msg_json):
         enc_json = json.loads(msg_json, encoding='utf-8')
         try:
@@ -158,6 +162,9 @@ class Session:
 
             elif req == cm.QUERY_SHOOT:
                 resp = self.shots_fired(client_id, enc_json['data'])
+                return resp
+            elif req == cm.QUERY_LEAVE:
+                resp = self.leave_game(client_id, enc_json['data'])
                 return resp
 
             else:

@@ -208,7 +208,10 @@ class MainApplication(tk.Tk):
         if response == "yes":
             # TODO: Eemalda m2ngija, saada ta tagasi m2ngude valikusse vms
             # TODO: Kui lahkus master siis vaja uus valida p2rast
-            return
+            self.c.query_leave(self.game.game_id)
+            self.state = "NO_GAMES"
+            self.game = None
+            print "%s left the game" % self.nickname
         else:
             return
 
@@ -274,6 +277,8 @@ class MainApplication(tk.Tk):
 
     def mark_lost_ships(self, lost_ships):
         for player, ship in lost_ships.items():
+            # SIIN M2RGIB 2RA SINU OMA LAEVA ASUKOHA PUNASEKS, KUI TEISE SELLINE LAEV L2KS JUST P6HJA. FIX IT!!
+            # SAMUTI EI N2ITA, KELLE LAEV JUST P6HJA L2KS
             if self.nickname != player:
                 ship_size = self.game.identifier.get(ship)[1]
                 x = self.ships.get(ship)[0]
