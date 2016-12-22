@@ -37,7 +37,7 @@ class Server:
             self.session = Session()
             self.im_aliiiiive = True
 
-            self.connection = pika.BlockingConnection(parameters=pika.ConnectionParameters(host=addr))
+            self.connection = pika.BlockingConnection(parameters=pika.ConnectionParameters(host=addr, heartbeat_interval=0))
             self.to_server = self.connection.channel()
             self.to_server.queue_declare(queue='in')
 
@@ -48,6 +48,7 @@ class Server:
             self.from_server_alive.exchange_declare(exchange='alive_out', type="fanout")
 
             self.thread1 = threading.Thread(target=self.connection_thread)
+            self.thread1.daemon = True
             self.thread1.start()
 
             self.from_server = self.connection.channel()
@@ -60,10 +61,11 @@ class Server:
         except KeyboardInterrupt:
             self.send_shutdown_msg()
             self.to_server.stop_consuming()
-        time.sleep(5)
-        print("filnalry")
+        finally:
+            time.sleep(5)
+            print("filnalry")
 
-        self.connection.close()
+            self.connection.close()
 
 
     def process_message(self, ch, method, properties, body):
@@ -78,12 +80,13 @@ class Server:
 
     def connection_thread(self):
         self.to_server_connection.basic_consume(self.process_alive_queue_msg, queue="alive_in", no_ack=True)
-        try:
-            self.to_server_connection.start_consuming()
-        except KeyboardInterrupt:
-            print("kfwvwrbwrbrwbwr")
-            self.to_server_connection.stop_consuming()
-            print("FAfegwegwrgwrgwr")
+        self.to_server_connection.start_consuming()
+        # try:
+        #     self.to_server_connection.start_consuming()
+        # except KeyboardInterrupt, SystemExit:
+        #     print("kfwvwrbwrbrwbwr")
+        #     self.to_server_connection.stop_consuming()
+        #     print("FAfegwegwrgwrgwr")
 
 
     def process_alive_queue_msg(self, ch, method, properties, body):
@@ -128,4 +131,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     srvr = Server(args.host, args.port)
-    exit(0)
+    #exit(0)
