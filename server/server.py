@@ -62,9 +62,7 @@ class Server:
             self.send_shutdown_msg()
             self.to_server.stop_consuming()
         finally:
-            time.sleep(5)
-            print("filnalry")
-
+            time.sleep(4)
             self.connection.close()
 
 
@@ -81,12 +79,6 @@ class Server:
     def connection_thread(self):
         self.to_server_connection.basic_consume(self.process_alive_queue_msg, queue="alive_in", no_ack=True)
         self.to_server_connection.start_consuming()
-        # try:
-        #     self.to_server_connection.start_consuming()
-        # except KeyboardInterrupt, SystemExit:
-        #     print("kfwvwrbwrbrwbwr")
-        #     self.to_server_connection.stop_consuming()
-        #     print("FAfegwegwrgwrgwr")
 
 
     def process_alive_queue_msg(self, ch, method, properties, body):

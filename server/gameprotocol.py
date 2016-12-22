@@ -16,6 +16,8 @@ class GameProtocol:
         self.table = {}
         self.master = master
         self.table[master] = [[0 for _ in range(size)] for i in range(size)]
+        # Alive ships : dict of nicks, where values are also dicts with every ship, more importantly a tuple
+        # (boolean ShipDead, int x coord, int y coord, boolean horizontal or not)
         self.alive_ships = {}
         self.game_started = False
         self.turn_list = [master]
@@ -47,8 +49,7 @@ class GameProtocol:
                 if not self._process_ship(client_nick, params[0], params[1], params[2], ship):
                     print ship
                     return False
-            self.alive_ships[client_nick] = {i: True for i in enc_ships.keys()}
-
+            self.alive_ships[client_nick] = {i: (j[0], j[1], j[2]) for i, j in enc_ships.items()}
             return enc_ships
 
     def _process_ship(self, client_nick, x, y, horizontal, ship):
@@ -90,15 +91,18 @@ class GameProtocol:
             else:
                 t_x, t_y = info[nick][0], info[nick][1]
                 if self.validate_coord(t_x, t_y):
-                    print
-                    if self.table[nick][t_x][t_y] > 0:
+                    if self.table[nick][t_x][t_y] > 3:
                         shooting_gallery[nick] = (t_x, t_y, True)
                         ship_id = self.table[nick][t_x][t_y]
                         self.table[nick][t_x][t_y] = self.im_hit_im_hit
                         if all(i != ship_id for i in chain(*self.table[nick])):
-                            she_dead[nick] = self.reverse_identifier[ship_id]
-                            if all(i < 4 for i in chain(*self.table[nick])):
-                                self.lost_list.append(nick)
+                            tmp_ship_type = self.reverse_identifier[ship_id]
+                            tmp_dead_ship = self.alive_ships[nick].pop(tmp_ship_type)
+                            she_dead[nick] = tmp_dead_ship
+                        # if all(i < 4 for i in chain(*self.table[nick])):
+                        #    self.lost_list.append(nick)
+                        if len(self.alive_ships[nick]) == 0:
+                            self.lost_list.append(nick)
                     else:
                         shooting_gallery[nick] = (t_x, t_y, False)
                         self.table[nick][t_x][t_y] = self.i_missed
@@ -111,6 +115,7 @@ class GameProtocol:
         else:
             self.current_turn += 1
             next_player = self.turn_list[self.current_turn]
+        print(she_dead)
         result = {"next": next_player,
                   "lost": self.lost_list,
                   "ships_lost": she_dead,
