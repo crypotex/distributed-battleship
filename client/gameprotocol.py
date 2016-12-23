@@ -30,7 +30,11 @@ class GameProtocol:
                 else:
                     try:
                         coords = params[0].split(",")
-                        coords[1] = int(coords[1])
+                        if len(coords) != 2 or not coords[0] or not coords[1]:
+                            self.table[self.client_nick] = [[0 for _ in range(self.size)] for i in range(self.size)]
+                            return False
+                        else:
+                            coords[1] = int(coords[1])
                     except ValueError:
                         self.table[self.client_nick] = [[0 for _ in range(self.size)] for i in range(self.size)]
                         return False
