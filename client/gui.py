@@ -211,7 +211,7 @@ class MainApplication(tk.Tk):
             self.c.query_leave(self.game.game_id)
             self.state = "NO_GAMES"
             self.game = None
-            print "%s left the game" % self.nickname
+            self.c.query_games()
         else:
             return
 
@@ -555,13 +555,16 @@ class MainApplication(tk.Tk):
                             self.show_grids()
                     elif self.state == "SHOOT":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            extra = msg['data']
-                            self.show_hits(extra)
-                            if self.nickname == extra["next"]:
-                                self.shooting_frame(self.opponents)
-                            if self.nickname == extra["origin"]:
-                                self.destroy_shoot()
-                                self.update()
+                            if msg['data']['type'] == 'leave':
+                                print "Somebody left."
+                            else:
+                                extra = msg['data']
+                                self.show_hits(extra)
+                                if self.nickname == extra["next"]:
+                                    self.shooting_frame(self.opponents)
+                                if self.nickname == extra["origin"]:
+                                    self.destroy_shoot()
+                                    self.update()
                         else:
                             print("Something went wrong from getting shots fired.")
                 else:

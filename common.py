@@ -74,6 +74,9 @@ ERR_MSGS[RSP_BAD_REQUEST] = "Bad request, probably missing data."
 RSP_NOT_IMPLEMENTED_YET = '667'
 ERR_MSGS[RSP_NOT_IMPLEMENTED_YET] = "Unimplemented functionality"
 
+RSP_LEAVE_GAME = '18'
+ERR_MSGS[RSP_LEAVE_GAME] = "Unable to leave game."
+
 # Alive messages -----------------------------------------------------------------
 KEEP_ALIVE = '1001'
 DISCONNECT = '1002'

@@ -90,7 +90,7 @@ class Session:
             resp = self.games[game_id].start_game()
             clients = self.get_client_id_by_nick(resp)
             if resp:
-                return prepare_response(clients, data={"nicks": resp, 'type': "Start"})
+                return prepare_response(clients, data={"nicks": resp, 'type': "start"})
             else:
                 return prepare_neg_response(cm.RSP_SHIPS_NOT_PLACED, client_id)
         else:
@@ -102,6 +102,7 @@ class Session:
             resp = game.shoot_bombs(shots_dict['shots_fired'])
             if resp:
                 client_ids = self.get_client_id_by_nick(game.get_nicks())
+                resp['type'] = 'shoot'
                 return prepare_response(client_ids, resp)
             else:
                 return prepare_neg_response(cm.RSP_INVALID_SHOT, client_id)
@@ -120,8 +121,20 @@ class Session:
             prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
 
     def leave_game(self, client_id, data):
-        pass
-
+        if data['game_id'] in self.games:
+            client_nick = self.clients[client_id]
+            resp = self.games[data['game_id']].user_leave_game(client_nick)
+            if resp:
+                if len(resp['opponents']) == 0:
+                    self.games.pop(data['game_id'])
+                    return
+                clients = self.get_client_id_by_nick(resp['opponents'])
+                resp['type'] = 'leave'
+                return prepare_response(clients, resp)
+            else:
+                prepare_neg_response(cm.RSP_LEAVE_GAME, client_id)
+        else:
+            prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
 
     def handle_request(self, msg_json):
         enc_json = json.loads(msg_json, encoding='utf-8')

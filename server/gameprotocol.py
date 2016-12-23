@@ -1,6 +1,7 @@
 from itertools import chain
+from random import randint
 
-__author__ = "Andre"
+__author__ = "Andre and Annika"
 
 
 class GameProtocol:
@@ -35,6 +36,24 @@ class GameProtocol:
                       "opponents": self.table.keys()
                       }
             return result
+
+    def user_leave_game(self, client):
+        if client not in self.table:
+            return False
+        else:
+            self.table.pop(client)
+            try:
+                self.turn_list.pop(self.turn_list.index(client))
+                self.alive_ships.pop(client)
+                self.lost_list.pop(client)
+            finally:
+                if client == self.master:
+                    random_id = randint(0, len(self.table.keys()) - 1)
+                    self.master = self.table.keys()[random_id]
+                result = {'master': self.master,
+                          'opponents': self.table.keys()}
+                return result
+
 
     def place_ships(self, client_nick, enc_ships):
         if type(enc_ships) is not dict:
