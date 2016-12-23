@@ -9,7 +9,7 @@ QUERY_JOIN_GAME = '6'
 START_GAME = '7'
 QUERY_SHOOT = '8'
 QUERY_CONNECTION = '9'
-
+QUERY_LEAVE = '10'
 
 CTR_MSGS = {QUERY_NICK: "Get nick available",
             QUERY_SERVERS: "Get available servers",

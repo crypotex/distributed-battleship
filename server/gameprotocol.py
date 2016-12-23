@@ -72,9 +72,11 @@ class GameProtocol:
         return True
 
     def start_game(self):
-        if all([len(self.alive_ships[e]) == 5 for e in self.alive_ships]) and 1 < len(self.table) < 5:
+        nicks = self.get_nicks()
+        if all([len(self.alive_ships[e]) == 5 for e in self.alive_ships]) and len(self.alive_ships.keys()) == len(
+                nicks) and 1 < len(self.table) < 5:
             self.current_turn = 0
-            return self.get_nicks()
+            return nicks
         else:
             return False
 
@@ -87,7 +89,7 @@ class GameProtocol:
         she_dead = {}
         for nick in info:
             if nick in self.lost_list:
-                shooting_gallery[nick] = ("He dead", )
+                shooting_gallery[nick] = ("He dead",)
             else:
                 t_x, t_y = info[nick][0], info[nick][1]
                 if self.validate_coord(t_x, t_y):
