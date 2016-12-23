@@ -252,6 +252,7 @@ class MainApplication(tk.Tk):
         shots = msg['shots_fired']
         origin = msg['origin']
         lost_ships = msg['ships_lost']
+        losers = msg['lost']
 
         for player, v in shots.items():
             if self.nickname == origin:
@@ -271,6 +272,24 @@ class MainApplication(tk.Tk):
 
             if lost_ships:
                 self.mark_lost_ships(lost_ships)
+        if len(losers) > 0:
+            for i in losers:
+                if self.opp1_grid.label.cget('text') == i:
+                    self.opp1_grid.destroy()
+                    self.opp1_shoot.destroy()
+                self.shooter = tk.Label(self, text="%s is dead!..LOL" % i, fg="firebrick",
+                                        font=("Helvetica", 14, "bold"), padx=10, pady=10)
+                self.shooter.grid(row=9, columnspan=4)
+                self.shooter.after(3500, self.shooter.destroy)
+        if self.nickname in losers:
+            result = tkMessageBox.askyesno("Info", "Would you like to stay and spectate?")
+            if result == 'yes':
+                self.state = "SPECTATE"
+            else:
+                self.c.query_leave(self.game.game_id)
+                self.state = "NO_GAMES"
+                self.game = None
+                self.c.query_games()
 
     def mark_lost_ships(self, lost_ships):
         r = 9
@@ -601,6 +620,13 @@ class MainApplication(tk.Tk):
                                     self.update()
                         else:
                             print("Something went wrong from getting shots fired.")
+                    elif self.state == "SPECTATE":
+                        print "got to spectate mode"
+                        result = tkMessageBox.askyesno("Info", "Would you like to stay and spectate?")
+                        if result == 'yes':
+                            self.state = "SPECTATE"
+                        else:
+                            self.leave_game()
                 else:
                     print msg
 
