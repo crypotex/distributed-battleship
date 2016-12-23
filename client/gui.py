@@ -206,8 +206,6 @@ class MainApplication(tk.Tk):
     def leave_game(self):
         response = tkMessageBox.askquestion("Warning", "Are you sure you want to leave? Your ships will be removed.")
         if response == "yes":
-            # TODO: Eemalda m2ngija, saada ta tagasi m2ngude valikusse vms
-            # TODO: Kui lahkus master siis vaja uus valida p2rast
             self.c.query_leave(self.game.game_id)
             self.state = "NO_GAMES"
             self.game = None
@@ -459,6 +457,35 @@ class MainApplication(tk.Tk):
         self.labels.append(self.opp2_grid.label)
         self.labels.append(self.opp3_grid.label)
 
+    def change_names_after_leaving(self):
+        texts = []
+        for i in range(len(self.labels)):
+            if self.labels[i].cget('text') != "Opponent":
+                texts.append(self.labels[i].cget('text'))
+        if texts != self.opponents:
+            # TODO: find out which opponent left
+            missing_list = [x for x in texts if x not in self.opponents]
+            for missing in missing_list:
+                if self.opp1_grid.label.cget('text') == missing:
+                    try:
+                        self.opp1_shoot.configure(state='disable')
+                    except:
+                        pass
+                elif self.opp2_grid.label.cget('text') == missing:
+                    try:
+                        self.opp2_shoot.configure(state='disable')
+                    except:
+                        pass
+                elif self.opp3_grid.label.cget('text') == missing:
+                    try:
+                        self.opp3_shoot.configure(state='disable')
+                    except:
+                        pass
+                for j in range(len(self.labels)):
+                    if self.labels[j].cget('text') == missing:
+                        self.labels[j].configure(text="Opponent")
+
+
     def process_incoming(self):
         while self.queue.qsize():
             try:
@@ -477,6 +504,7 @@ class MainApplication(tk.Tk):
                     elif self.state == "NO_GAMES":
                         if msg['type'] == cm.RSP_OK:
                             self.games = msg['data']
+                            self.opponents = []
                             self.choose_game()
                         else:
                             print("Didn't get response from server about games.")
@@ -559,6 +587,12 @@ class MainApplication(tk.Tk):
                         if msg['type'] == cm.RSP_MULTI_OK:
                             if msg['data']['type'] == 'leave':
                                 print "Somebody left."
+                                self.game.master = msg['data']['master']
+                                if self.opponents != msg['data']['opponents']:
+                                    self.opponents = msg['data']['opponents']
+                                    self.change_names_after_leaving()
+                                if self.nickname == msg['data']['next']:
+                                    self.shooting_frame(self.opponents)
                             else:
                                 extra = msg['data']
                                 self.show_hits(extra)
