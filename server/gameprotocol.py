@@ -50,8 +50,16 @@ class GameProtocol:
                 if client == self.master:
                     random_id = randint(0, len(self.table.keys()) - 1)
                     self.master = self.table.keys()[random_id]
+
+                # TODO: kui on turn_list [tere, kala, saba] ja kala lahkub, siis peaks saba kord tulema, aga praeguse lahendusega tuleb tere
+                if self.current_turn >= len(self.turn_list) - 1:
+                    self.current_turn = 0
+                    next_player = self.turn_list[self.current_turn]
+                else:
+                    next_player = self.turn_list[self.current_turn]
                 result = {'master': self.master,
-                          'opponents': self.table.keys()}
+                          'opponents': self.table.keys(),
+                          'next': next_player}
                 return result
 
 
