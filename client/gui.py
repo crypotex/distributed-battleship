@@ -195,7 +195,6 @@ class MainApplication(tk.Tk):
             self.disable_grid(w3)
 
         self.shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
-        self.shoot_button.grid(row=8, columnspan=2)
         self.shoot_button.grid(row=7, columnspan=2, pady=(15, 0))
 
         self.leave_button = tk.Button(self, text="Leave game", command=lambda: self.leave_game(), padx=20, pady=10)
@@ -274,10 +273,8 @@ class MainApplication(tk.Tk):
                 self.mark_lost_ships(lost_ships)
 
     def mark_lost_ships(self, lost_ships):
+        r = 9
         for player, ship in lost_ships.items():
-            # SIIN M2RGIB 2RA SINU OMA LAEVA ASUKOHA PUNASEKS, KUI TEISE SELLINE LAEV L2KS JUST P6HJA. FIX IT!!
-            # SAMUTI EI N2ITA, KELLE LAEV JUST P6HJA L2KS
-            # MIGHT BE FIXED I THINK
             ship_type = ship[0]
             if self.nickname != player:
                 ship_size = self.game.identifier.get(ship_type)[1]
@@ -301,19 +298,20 @@ class MainApplication(tk.Tk):
                         elif self.opp3_grid.label.cget('text') == player:
                             self.opp3_grid.gridp.itemconfig(self.opp3_grid.gridp.rect[x + i, y], fill="firebrick")
 
-            self.titanic = tk.Label(self, text="%s's %s has been destroyed! Bummer :(" % (player, ship_type), fg="firebrick",
-                                    font=("Helvetica", 14, "bold"), padx=10, pady=10)
-            self.titanic.grid(row=9, columnspan=4)
+            self.titanic = tk.Label(self, text="%s's %s has been destroyed! Bummer :(" % (player, ship_type),
+                                    fg="firebrick", font=("Helvetica", 14, "bold"), padx=10, pady=10)
+            self.titanic.grid(row=r, columnspan=4)
             self.titanic.after(3500, self.titanic.destroy)
+            r += 1
 
     @staticmethod
     def mark_hit_or_miss(v, opp_grid):
         if not v[-1]:
-            if (v[0],v[1]) not in opp_grid.gridp.shots:
+            if (v[0], v[1]) not in opp_grid.gridp.shots:
                 opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="DodgerBlue3")
         else:
             opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="firebrick")
-            opp_grid.gridp.shots.append((v[0],v[1]))
+            opp_grid.gridp.shots.append((v[0], v[1]))
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)
@@ -626,5 +624,3 @@ if __name__ == "__main__":
 # TODO: if only one player and he leaves, delete the game
 # TODO: if you leave (from the button), remove your ships from the game
 # TODO: if some opponent leaves before game starts (closes from the corner X), remove him/her from the opponents list (server-side) and update the grid names in gui
-
-# TODO: Kui laev on p6hja l2inud, siis seda m2rgitakse delay-ga, ehk et alles siis kui enda shoti oled 2ra teinud, siis n2ed kas kellelgi on vahepeal m6ni laev p6hja l2inud
