@@ -311,9 +311,11 @@ class MainApplication(tk.Tk):
     @staticmethod
     def mark_hit_or_miss(v, opp_grid):
         if not v[-1]:
-            opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="DodgerBlue3")
+            if (v[0],v[1]) not in opp_grid.gridp.shots:
+                opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="DodgerBlue3")
         else:
             opp_grid.gridp.itemconfig(opp_grid.gridp.rect[v[0], v[1]], fill="firebrick")
+            opp_grid.gridp.shots.append((v[0],v[1]))
 
     def center(self, width, height):
         x = (self.winfo_screenwidth() / 2) - (width / 2)

@@ -22,7 +22,7 @@ class Grid(tk.Canvas):
         self.config(height=self.grid_size, width=self.grid_size)
         self.mine = mine
         self.player = ""
-
+        self.shots = []
         self.make_grid()
 
     def make_grid(self):
