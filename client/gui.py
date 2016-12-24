@@ -188,19 +188,12 @@ class MainApplication(tk.Tk):
         self.opp3_shoot.grid(row=1, column=0)
         w3.grid(row=4, column=1)
 
-        if self.state == "SHOOT":
-            if self.opp1_grid.label.cget("text") == "Opponent":
-                self.disable_grid(w1)
-            if self.opp2_grid.label.cget("text") == "Opponent":
-                self.disable_grid(w2)
-            if self.opp3_grid.label.cget("text") == "Opponent":
-                self.disable_grid(w3)
-        else:
-            if len(opponents) - 1 < 2:
-                self.disable_grid(w2)
-                self.disable_grid(w3)
-            elif len(opponents) - 1 < 3:
-                self.disable_grid(w3)
+        if self.opp1_grid.label.cget("text") == "Opponent":
+            self.disable_grid(w1)
+        if self.opp2_grid.label.cget("text") == "Opponent":
+            self.disable_grid(w2)
+        if self.opp3_grid.label.cget("text") == "Opponent":
+            self.disable_grid(w3)
 
         self.shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
         self.shoot_button.grid(row=7, columnspan=2, pady=(15, 0))
@@ -309,7 +302,7 @@ class MainApplication(tk.Tk):
                 self.c.query_games()
 
     def mark_lost_ships(self, lost_ships):
-        r = 9
+        r = 10
         for player, ship in lost_ships.items():
             ship_type = ship[0]
             if self.nickname != player:
@@ -491,6 +484,15 @@ class MainApplication(tk.Tk):
         self.labels.append(self.opp2_grid.label)
         self.labels.append(self.opp3_grid.label)
 
+    # Method to change grid names if someone left before a game started
+    def change_names_before_start(self):
+        opponent_labels = [label.cget('text') for label in self.labels if label.cget('text') != "Opponent"]
+        missing = list(set(opponent_labels) - set(self.opponents))
+        for m in missing:
+            for label in self.labels:
+                if label.cget('text') == m:
+                    label.configure(text="Opponent")
+
     def change_names_after_leaving(self):
         texts = []
         for i in range(len(self.labels)):
@@ -520,7 +522,6 @@ class MainApplication(tk.Tk):
                 for j in range(len(self.labels)):
                     if self.labels[j].cget('text') == missing:
                         self.labels[j].configure(text="Opponent")
-
 
     def process_incoming(self):
         while self.queue.qsize():
@@ -595,6 +596,12 @@ class MainApplication(tk.Tk):
                                 self.opponents = msg['data']['opponents']
                                 self.change_names(self.opponents)
                                 self.update_idletasks()
+                            elif msg['data']['type'] == "leave":
+                                print "Somebody left before start."
+                                self.game.master = msg['data']['master']
+                                if self.opponents != msg['data']['opponents']:
+                                    self.opponents = msg['data']['opponents']
+                                    self.change_names_before_start()
                             else:
                                 tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
                                 self.state = "SHOOT"
@@ -655,6 +662,8 @@ class MainApplication(tk.Tk):
                 pass
 
     def on_exit(self):
+        if self.state == "NO_START_GAME":
+            self.c.query_leave(self.game.game_id)
         self.destroy()
         self.c.stop_the_thread_please()
         print("Beep Beep Beep Beep, Closing the shop!")
