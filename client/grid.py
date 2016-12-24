@@ -47,6 +47,11 @@ class Grid(tk.Canvas):
                 if self.mine:
                     self.itemconfig(self.rect[row, column], tags=self)
 
+    def clear_grid(self):
+        for column in range(self.columns):
+            for row in range(self.rows):
+                self.rect[row, column].configure(fill="")
+
 
 class GridFrame(tk.Frame):
     def __init__(self, master, size, mine):

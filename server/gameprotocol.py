@@ -41,25 +41,32 @@ class GameProtocol:
         if client not in self.table:
             return False
         else:
+            previous_next = self.turn_list[self.current_turn]
             self.table.pop(client)
             try:
+                leaving_index = self.turn_list.index(client)
                 self.turn_list.pop(self.turn_list.index(client))
+
+                if leaving_index < self.current_turn:
+                    if self.current_turn == 0:
+                        self.current_turn = len(self.turn_list) - 1
+                    else:
+                        self.current_turn -= 1
+                elif leaving_index > self.current_turn:
+                    if self.current_turn == len(self.turn_list) - 1:
+                        self.current_turn = 0
+                    else:
+                        self.current_turn += 1
+
                 self.alive_ships.pop(client)
                 self.lost_list.pop(client)
             finally:
-                if client == self.master:
+                if client == self.master and len(self.table.keys()) >= 1:
                     random_id = randint(0, len(self.table.keys()) - 1)
                     self.master = self.table.keys()[random_id]
-
-                # TODO: kui on turn_list [tere, kala, saba] ja kala lahkub, siis peaks saba kord tulema, aga praeguse lahendusega tuleb tere
-                if self.current_turn >= len(self.turn_list) - 1:
-                    self.current_turn = 0
-                    next_player = self.turn_list[self.current_turn]
-                else:
-                    next_player = self.turn_list[self.current_turn]
                 result = {'master': self.master,
                           'opponents': self.table.keys(),
-                          'next': next_player}
+                          'next': previous_next}
                 return result
 
 

@@ -480,22 +480,24 @@ class MainApplication(tk.Tk):
             if self.labels[i].cget('text') != "Opponent":
                 texts.append(self.labels[i].cget('text'))
         if texts != self.opponents:
-            # TODO: find out which opponent left
             missing_list = [x for x in texts if x not in self.opponents]
             for missing in missing_list:
                 if self.opp1_grid.label.cget('text') == missing:
                     try:
-                        self.opp1_shoot.configure(state='disable')
+                        self.opp1_shoot.configure(state='disabled')
+                        self.opp1_grid.gridp.clear_grid()
                     except:
                         pass
                 elif self.opp2_grid.label.cget('text') == missing:
                     try:
                         self.opp2_shoot.configure(state='disable')
+                        self.opp2_grid.gridp.clear_grid()
                     except:
                         pass
                 elif self.opp3_grid.label.cget('text') == missing:
                     try:
                         self.opp3_shoot.configure(state='disable')
+                        self.opp3_grid.gridp.clear_grid()
                     except:
                         pass
                 for j in range(len(self.labels)):
@@ -605,11 +607,11 @@ class MainApplication(tk.Tk):
                             if msg['data']['type'] == 'leave':
                                 print "Somebody left."
                                 self.game.master = msg['data']['master']
+                                if self.nickname == msg['data']['next']:
+                                    self.shooting_frame(self.opponents)
                                 if self.opponents != msg['data']['opponents']:
                                     self.opponents = msg['data']['opponents']
                                     self.change_names_after_leaving()
-                                if self.nickname == msg['data']['next']:
-                                    self.shooting_frame(self.opponents)
                             else:
                                 extra = msg['data']
                                 self.show_hits(extra)
