@@ -136,8 +136,8 @@ class MainApplication(tk.Tk):
         self.opp2_grid.grid(row=3, column=0)
         self.opp3_grid.grid(row=3, column=1)
 
-        start_button = tk.Button(self, text="Start game", padx=10, pady=20,
-                                 command=lambda: self.start_game(start_button))
+        self.start_button = tk.Button(self, text="Start game", padx=10, pady=20,
+                                 command=lambda: self.start_game(self.start_button))
 
         for ship, value in self.ships.items():
             ship_size = self.game.identifier.get(ship)[1]
@@ -149,7 +149,7 @@ class MainApplication(tk.Tk):
                     self.my_grid.gridp.itemconfig(self.my_grid.gridp.rect[value[0] + i, value[1]], fill="peru")
 
         if self.nickname == self.game.master:
-            start_button.grid(row=6, columnspan=2)
+            self.start_button.grid(row=6, columnspan=2)
         else:
             self.process_incoming()
 
@@ -597,8 +597,11 @@ class MainApplication(tk.Tk):
                                 self.change_names(self.opponents)
                                 self.update_idletasks()
                             elif msg['data']['type'] == "leave":
-                                print "Somebody left before start."
-                                self.game.master = msg['data']['master']
+                                print "Somebody left before the start."
+                                if self.game.master != msg['data']['master']:
+                                    self.game.master = msg['data']['master']
+                                    if self.nickname == self.game.master:
+                                        self.start_button.grid(row=6, columnspan=2)
                                 if self.opponents != msg['data']['opponents']:
                                     self.opponents = msg['data']['opponents']
                                     self.change_names_before_start()
