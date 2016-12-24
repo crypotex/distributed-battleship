@@ -50,7 +50,7 @@ class Grid(tk.Canvas):
     def clear_grid(self):
         for column in range(self.columns):
             for row in range(self.rows):
-                self.rect[row, column].configure(fill="")
+                self.itemconfig(self.rect[row, column], fill="")
 
 
 class GridFrame(tk.Frame):

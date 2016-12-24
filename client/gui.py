@@ -188,11 +188,19 @@ class MainApplication(tk.Tk):
         self.opp3_shoot.grid(row=1, column=0)
         w3.grid(row=4, column=1)
 
-        if len(opponents) - 1 < 2:
-            self.disable_grid(w2)
-            self.disable_grid(w3)
-        elif len(opponents) - 1 < 3:
-            self.disable_grid(w3)
+        if self.state == "SHOOT":
+            if self.opp1_grid.label.cget("text") == "Opponent":
+                self.disable_grid(w1)
+            if self.opp2_grid.label.cget("text") == "Opponent":
+                self.disable_grid(w2)
+            if self.opp3_grid.label.cget("text") == "Opponent":
+                self.disable_grid(w3)
+        else:
+            if len(opponents) - 1 < 2:
+                self.disable_grid(w2)
+                self.disable_grid(w3)
+            elif len(opponents) - 1 < 3:
+                self.disable_grid(w3)
 
         self.shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
         self.shoot_button.grid(row=7, columnspan=2, pady=(15, 0))
@@ -218,18 +226,27 @@ class MainApplication(tk.Tk):
             child.configure(state='disable')
 
     def destroy_shoot(self):
-        self.opp1_shoot.destroy()
-        self.opp2_shoot.destroy()
-        self.opp3_shoot.destroy()
-        self.shoot_button.destroy()
+        try:
+            self.opp1_shoot.destroy()
+            self.opp2_shoot.destroy()
+            self.opp3_shoot.destroy()
+            self.shoot_button.destroy()
+        except:
+            pass
 
     def shoot(self, event):
-        coords = {self.opp1_grid.label.cget("text"): self.opp1_shoot.get()}
+        coords = {}
 
+        if self.opp1_shoot.cget('state') != 'disabled':
+            coords[self.opp1_grid.label.cget("text")] = self.opp1_shoot.get()
         if self.opp2_shoot.cget('state') != 'disabled':
             coords[self.opp2_grid.label.cget("text")] = self.opp2_shoot.get()
         if self.opp3_shoot.cget('state') != 'disabled':
             coords[self.opp3_grid.label.cget("text")] = self.opp3_shoot.get()
+
+        if len(coords.keys()) == 0:
+            self.shoot_button.destroy()
+            return
 
         for key, val in coords.items():
             if not val:
@@ -554,7 +571,7 @@ class MainApplication(tk.Tk):
                         else:
                             tkMessageBox.showwarning("Didn't get grid size from server.")
                             self.state = "NO_GAMES"
-                            self.choose_game()
+                            self.c.query_games()
                     elif self.state == "NO_SHIPS":
                         if msg['type'] == cm.RSP_OK:
                             self.ships = {}
@@ -609,6 +626,8 @@ class MainApplication(tk.Tk):
                                 self.game.master = msg['data']['master']
                                 if self.nickname == msg['data']['next']:
                                     self.shooting_frame(self.opponents)
+                                else:
+                                    self.destroy_shoot()
                                 if self.opponents != msg['data']['opponents']:
                                     self.opponents = msg['data']['opponents']
                                     self.change_names_after_leaving()
@@ -648,7 +667,6 @@ if __name__ == "__main__":
 
 
 # TODO: when you lost -> possibility to leave OR possibility for spectator mode
-# TODO: if master leaves, random new master
 # TODO: if only one player and he leaves, delete the game
 # TODO: if you leave (from the button), remove your ships from the game
 # TODO: if some opponent leaves before game starts (closes from the corner X), remove him/her from the opponents list (server-side) and update the grid names in gui
