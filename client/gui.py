@@ -281,8 +281,8 @@ class MainApplication(tk.Tk):
 
             if lost_ships:
                 self.mark_lost_ships(lost_ships)
-        if losers:
-            self.mark_losers(losers)
+        if losers and list(set(losers) - set(self.game.losers)):
+            self.mark_losers(list(set(losers) - set(self.game.losers)))
 
     def mark_losers(self, losers):
         for player in losers:
@@ -297,6 +297,7 @@ class MainApplication(tk.Tk):
                                     font=("Helvetica", 14, "bold"), padx=10, pady=10)
             self.shooter.grid(row=9, columnspan=4)
             self.shooter.after(3500, self.shooter.destroy)
+            self.game.losers.append(player)
 
         if self.nickname in losers:
             if tkMessageBox.askyesno("Info", "Would you like to stay and spectate?"):

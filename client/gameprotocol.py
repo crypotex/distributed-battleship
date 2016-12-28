@@ -12,6 +12,7 @@ class GameProtocol:
         self.game_started = False
         self.client_nick = client_nick
         self.master = master
+        self.losers = []
 
         self.table[client_nick] = [[0 for _ in range(size)] for i in range(size)]
 
