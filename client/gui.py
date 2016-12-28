@@ -624,14 +624,21 @@ class MainApplication(tk.Tk):
                             self.show_grids()
                     elif self.state == "START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
-                            for opponent in msg['data']['nicks']:
-                                if opponent not in self.opponents:
-                                    self.opponents.append(opponent)
-                            if self.game.master == self.nickname:
-                                self.shooting_frame(self.opponents)
+                            if msg['data']['type'] == "leave":
+                                print "Somebody left right after start."
+                                if self.game.master != msg['data']['master']:
+                                    self.game.master = msg['data']['master']
+                                self.opponents = msg['data']['opponents']
+                                self.change_names_after_leaving()
                             else:
-                                tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
-                                self.state = "SHOOT"
+                                for opponent in msg['data']['nicks']:
+                                    if opponent not in self.opponents:
+                                        self.opponents.append(opponent)
+                                if self.game.master == self.nickname:
+                                    self.shooting_frame(self.opponents)
+                                else:
+                                    tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
+                                    self.state = "SHOOT"
                         else:
                             print("Something went wrong when starting the game.")
                             tkMessageBox.showwarning("Warning", "Please wait for other opponents.")
