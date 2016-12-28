@@ -1,5 +1,6 @@
 from itertools import chain
 from random import randint
+from collections import OrderedDict, Counter
 
 __author__ = "Andre and Annika"
 
@@ -9,6 +10,11 @@ class GameProtocol:
     reverse_identifier = {5: "Carrier", 6: "Battleship", 7: "Cruiser", 8: "Submarine", 9: "Destroyer"}
     im_hit_im_hit = 1
     i_missed = 2
+
+    """
+    Turn list is a orderedDict, with key as nick and value as tuple of [status, index], status is 0 for ok, 1 for lost
+    and 2 for left/dc
+    """
 
     def __init__(self, game_id, size, master):
         # Master is a client nick
@@ -21,8 +27,8 @@ class GameProtocol:
         # (boolean ShipDead, int x coord, int y coord, boolean horizontal or not)
         self.alive_ships = {}
         self.game_started = False
-        self.turn_list = [master]
-        self.current_turn = 0
+        self.turn_list = OrderedDict([(master, [0, 0])])
+        self.current_turn = master
         self.lost_list = []
 
     def user_join_game(self, client):
@@ -30,7 +36,7 @@ class GameProtocol:
             return False
         else:
             self.table[client] = [[0 for _ in range(self.size)] for i in range(self.size)]
-            self.turn_list.append(client)
+            self.turn_list[client] = [0, len(self.turn_list)]
             result = {"size": self.size,
                       "master": self.master,
                       "opponents": self.table.keys()
@@ -41,34 +47,40 @@ class GameProtocol:
         if client not in self.table:
             return False
         else:
-            previous_next = self.turn_list[self.current_turn]
-            self.table.pop(client)
             try:
-                leaving_index = self.turn_list.index(client)
-                self.turn_list.pop(self.turn_list.index(client))
+                leaver = self.turn_list[client]
 
-                if leaving_index < self.current_turn:
-                    if self.current_turn == 0:
-                        self.current_turn = len(self.turn_list) - 1
-                    else:
-                        self.current_turn -= 1
-                elif leaving_index > self.current_turn:
-                    if self.current_turn == len(self.turn_list) - 1:
-                        self.current_turn = 0
-                    else:
-                        self.current_turn += 1
+                if leaver[0] == 0:
+                    self.turn_list[client][0] = 2
+                    self.table.pop(client)
 
-                self.alive_ships.pop(client)
-                self.lost_list.pop(client)
-            finally:
-                if client == self.master and len(self.table.keys()) >= 1:
-                    random_id = randint(0, len(self.table.keys()) - 1)
-                    self.master = self.table.keys()[random_id]
+                elif leaver[0] == 1:
+                    pass
+                else:
+                    print("User already dc-d or left or lost")
+                    return False
+            except KeyError:
+                print("KEYERRORRR")
+                return False
+
+            if client == self.master and len(self.table.keys()) >= 1:
+                random_id = randint(0, len(self.table.keys()) - 1)
+                self.master = self.table.keys()[random_id]
+
+            remaining = Counter(n for n, s in self.turn_list.items() if s[0] == 0)
+            if len(remaining) == 0:
                 result = {'master': self.master,
                           'opponents': self.table.keys(),
-                          'next': previous_next}
-                return result
+                          'next': self.current_turn,
+                          'winner': self.master}
+            else:
+                if self.current_turn == client:
+                    next_turn = self.next_turn()
 
+                result = {'master': self.master,
+                          'opponents': self.table.keys(),
+                          'next': next_turn}
+            return result
 
     def place_ships(self, client_nick, enc_ships):
         if type(enc_ships) is not dict:
@@ -109,17 +121,22 @@ class GameProtocol:
         nicks = self.get_nicks()
         if all([len(self.alive_ships[e]) == 5 for e in self.alive_ships]) and len(self.alive_ships.keys()) == len(
                 nicks) and 1 < len(self.table) < 5:
-            self.current_turn = 0
+            self.current_turn = self.master
             return nicks
         else:
             return False
+
+    def next_turn(self):
+        cur_players = [n for n, s in self.turn_list.items() if s[0] == 0]
+        self.current_turn = cur_players[cur_players.index(self.current_turn) + 1]
+        return self.current_turn
 
     def get_nicks(self):
         return [nick for nick in self.table]
 
     def shoot_bombs(self, info):
         shooting_gallery = {}
-        origin = self.turn_list[self.current_turn]
+        origin = self.current_turn
         she_dead = {}
         for nick in info:
             if nick in self.lost_list:
@@ -147,13 +164,8 @@ class GameProtocol:
                 else:
                     return False
 
-        if self.current_turn == len(self.turn_list) - 1:
-            self.current_turn = 0
-            next_player = self.turn_list[self.current_turn]
-        else:
-            self.current_turn += 1
-            next_player = self.turn_list[self.current_turn]
-        print(she_dead)
+        next_player = self.next_turn()
+
         result = {"next": next_player,
                   "lost": self.lost_list,
                   "ships_lost": she_dead,
@@ -168,4 +180,4 @@ class GameProtocol:
             return False
 
     def check_client_turn(self, client_nick):
-        return client_nick == self.turn_list[self.current_turn]
+        return client_nick == self.current_turn
