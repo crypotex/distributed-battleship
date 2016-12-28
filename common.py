@@ -77,6 +77,9 @@ ERR_MSGS[RSP_NOT_IMPLEMENTED_YET] = "Unimplemented functionality"
 RSP_LEAVE_GAME = '18'
 ERR_MSGS[RSP_LEAVE_GAME] = "Unable to leave game."
 
+RSP_NOANSWER = '2000123'
+ERR_MSGS[RSP_NOANSWER] = "Server doesn't respond to anyone."
+
 # Alive messages -----------------------------------------------------------------
 KEEP_ALIVE = '1001'
 DISCONNECT = '1002'

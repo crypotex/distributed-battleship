@@ -54,6 +54,19 @@ class GameProtocol:
                     self.turn_list[client][0] = 2
                     self.table.pop(client)
 
+                    if self.current_turn == client:
+                        magic = self.turn_list.keys() * 2
+                        magic_index = magic.index(client)
+                        while magic_index < len(magic) and self.turn_list[magic[magic_index]][0] != 0:
+                            magic_index += 1
+                        try:
+                            self.current_turn = magic[magic_index]
+                        except IndexError as ie:
+                            result = {'master': self.master,
+                                      'opponents': self.table.keys(),
+                                      'next': self.current_turn}
+                            return result
+
                 elif leaver[0] == 1:
                     pass
                 else:
@@ -74,12 +87,9 @@ class GameProtocol:
                           'next': self.current_turn,
                           'winner': self.master}
             else:
-                if self.current_turn == client:
-                    next_turn = self.next_turn()
-
                 result = {'master': self.master,
                           'opponents': self.table.keys(),
-                          'next': next_turn}
+                          'next': self.current_turn}
             return result
 
     def place_ships(self, client_nick, enc_ships):
@@ -128,7 +138,10 @@ class GameProtocol:
 
     def next_turn(self):
         cur_players = [n for n, s in self.turn_list.items() if s[0] == 0]
-        self.current_turn = cur_players[cur_players.index(self.current_turn) + 1]
+        indeks = cur_players.index(self.current_turn) + 1
+        if indeks == len(cur_players):
+            indeks = 0
+        self.current_turn = cur_players[indeks]
         return self.current_turn
 
     def get_nicks(self):

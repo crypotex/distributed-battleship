@@ -570,6 +570,7 @@ class MainApplication(tk.Tk):
                             self.choose_ships()
                         elif msg['type'] == cm.RSP_NO_SUCH_GAME:
                             tkMessageBox.showwarning("Warning", "This game doesn't exist anymore.")
+                            self.state = "NO_GAMES"
                             self.c.query_games()
                         else:
                             tkMessageBox.showwarning("Warning", "Didn't get grid size from server.")

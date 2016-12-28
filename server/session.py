@@ -127,7 +127,7 @@ class Session:
             if resp:
                 if len(resp['opponents']) == 0:
                     self.games.pop(data['game_id'])
-                    return
+                    return prepare_neg_response(cm.RSP_NOANSWER, client_id)
                 clients = self.get_client_id_by_nick(resp['opponents'])
                 resp['type'] = 'leave'
                 return prepare_response(clients, resp)

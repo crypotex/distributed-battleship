@@ -50,7 +50,7 @@ class Comm:
         self.thread3.daemon = True
 
     def connect_to_server(self, server_addr):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_addr))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_addr, heartbeat_interval=0))
 
         self.to_server = connection.channel()
         self.to_server.queue_declare(queue='in')

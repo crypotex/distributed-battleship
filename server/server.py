@@ -72,19 +72,19 @@ class Server:
             resp = self.session.handle_request(body)
             enc_resp = json.loads(resp)
             LOG.info("Before sending, got response: %s." % resp)
-            if len(enc_resp['clients']) == 1:
-                LOG.info("Routing key: %s" % properties.reply_to)
-                self.from_server.basic_publish(exchange='out', routing_key=properties.reply_to,
-                                               properties=pika.BasicProperties(
-                                                   correlation_id=properties.correlation_id,
-                                               ),
-                                               body=resp)
+            if enc_resp['type'] != cm.RSP_NOANSWER:
+                if len(enc_resp['clients']) == 1 and properties.reply_to is not None:
+                    self.from_server.basic_publish(exchange='out', routing_key=properties.reply_to,
+                                                   properties=pika.BasicProperties(
+                                                       correlation_id=properties.correlation_id,
+                                                   ),
+                                                   body=resp)
 
-                LOG.info("Sent RPC response to %s, msg was: %s." % (properties.reply_to, enc_resp))
-            else:
-                for client in enc_resp['clients']:
-                    self.from_server.basic_publish(exchange='out', routing_key=client, body=resp)
-                    LOG.info("Sent response to %s, msg was: %s." % (client, enc_resp))
+                    LOG.info("Sent RPC response to %s, msg was: %s." % (properties.reply_to, enc_resp))
+                else:
+                    for client in enc_resp['clients']:
+                        self.from_server.basic_publish(exchange='out', routing_key=client, body=resp)
+                        LOG.info("Sent response to %s, msg was: %s." % (client, enc_resp))
 
     def connection_thread(self):
         self.to_server_connection.basic_consume(self.process_alive_queue_msg, queue="alive_in", no_ack=True)
