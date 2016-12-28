@@ -494,31 +494,30 @@ class MainApplication(tk.Tk):
                     label.configure(text="Opponent")
 
     def change_names_after_leaving(self):
-        texts = []
-        for i in range(len(self.labels)):
-            if self.labels[i].cget('text') != "Opponent":
-                texts.append(self.labels[i].cget('text'))
-        if texts != self.opponents:
-            missing_list = [x for x in texts if x not in self.opponents]
+        opponent_labels = [label.cget('text') for label in self.labels if label.cget('text') != "Opponent"]
+        if opponent_labels != self.opponents:
+            missing_list = [x for x in opponent_labels if x not in self.opponents]
             for missing in missing_list:
                 if self.opp1_grid.label.cget('text') == missing:
                     try:
-                        self.opp1_shoot.configure(state='disabled')
                         self.opp1_grid.gridp.clear_grid()
+                        self.opp1_shoot.configure(state='disabled')
                     except:
                         pass
-                elif self.opp2_grid.label.cget('text') == missing:
+                if self.opp2_grid.label.cget('text') == missing:
                     try:
-                        self.opp2_shoot.configure(state='disable')
                         self.opp2_grid.gridp.clear_grid()
+                        self.opp2_shoot.configure(state='disable')
                     except:
                         pass
-                elif self.opp3_grid.label.cget('text') == missing:
+                if self.opp3_grid.label.cget('text') == missing:
                     try:
-                        self.opp3_shoot.configure(state='disable')
                         self.opp3_grid.gridp.clear_grid()
+                        self.opp3_shoot.configure(state='disable')
                     except:
                         pass
+
+                self.update_idletasks()
                 for j in range(len(self.labels)):
                     if self.labels[j].cget('text') == missing:
                         self.labels[j].configure(text="Opponent")
@@ -569,8 +568,11 @@ class MainApplication(tk.Tk):
                             self.change_names(self.opponents)
                             self.update()
                             self.choose_ships()
+                        elif msg['type'] == cm.RSP_NO_SUCH_GAME:
+                            tkMessageBox.showwarning("Warning", "This game doesn't exist anymore.")
+                            self.c.query_games()
                         else:
-                            tkMessageBox.showwarning("Didn't get grid size from server.")
+                            tkMessageBox.showwarning("Warning", "Didn't get grid size from server.")
                             self.state = "NO_GAMES"
                             self.c.query_games()
                     elif self.state == "NO_SHIPS":
@@ -634,10 +636,9 @@ class MainApplication(tk.Tk):
                             if msg['data']['type'] == 'leave':
                                 print "Somebody left."
                                 self.game.master = msg['data']['master']
+                                self.destroy_shoot()
                                 if self.nickname == msg['data']['next']:
                                     self.shooting_frame(self.opponents)
-                                else:
-                                    self.destroy_shoot()
                                 if self.opponents != msg['data']['opponents']:
                                     self.opponents = msg['data']['opponents']
                                     self.change_names_after_leaving()
@@ -665,7 +666,7 @@ class MainApplication(tk.Tk):
                 pass
 
     def on_exit(self):
-        if self.state == "NO_START_GAME":
+        if self.state == "NO_START_GAME" or self.state == "START_GAME" or self.state == "SHOOT":
             self.c.query_leave(self.game.game_id)
         self.destroy()
         self.c.stop_the_thread_please()
@@ -677,8 +678,4 @@ if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
 
-
-# TODO: when you lost -> possibility to leave OR possibility for spectator mode
-# TODO: if only one player and he leaves, delete the game
-# TODO: if you leave (from the button), remove your ships from the game
-# TODO: if some opponent leaves before game starts (closes from the corner X), remove him/her from the opponents list (server-side) and update the grid names in gui
+# TODO: spectator mode
