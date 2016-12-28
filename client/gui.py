@@ -137,7 +137,7 @@ class MainApplication(tk.Tk):
         self.opp3_grid.grid(row=3, column=1)
 
         self.start_button = tk.Button(self, text="Start game", padx=10, pady=20,
-                                 command=lambda: self.start_game(self.start_button))
+                                      command=lambda: self.start_game(self.start_button))
 
         for ship, value in self.ships.items():
             ship_size = self.game.identifier.get(ship)[1]
@@ -204,8 +204,7 @@ class MainApplication(tk.Tk):
         self.bind("<Return>", self.shoot)
 
     def leave_game(self):
-        response = tkMessageBox.askquestion("Warning", "Are you sure you want to leave? Your ships will be removed.")
-        if response == "yes":
+        if tkMessageBox.askquestion("Warning", "Are you sure you want to leave? Your ships will be removed."):
             self.c.query_leave(self.game.game_id)
             self.state = "NO_GAMES"
             self.game = None
@@ -282,18 +281,25 @@ class MainApplication(tk.Tk):
 
             if lost_ships:
                 self.mark_lost_ships(lost_ships)
-        if len(losers) > 0:
-            for i in losers:
-                if self.opp1_grid.label.cget('text') == i:
-                    self.opp1_grid.destroy()
-                    self.opp1_shoot.destroy()
-                self.shooter = tk.Label(self, text="%s is dead!..LOL" % i, fg="firebrick",
-                                        font=("Helvetica", 14, "bold"), padx=10, pady=10)
-                self.shooter.grid(row=9, columnspan=4)
-                self.shooter.after(3500, self.shooter.destroy)
+        if losers:
+            self.mark_losers(losers)
+
+    def mark_losers(self, losers):
+        for player in losers:
+            if self.opp1_grid.label.cget('text') == player:
+                self.disable_grid(self.opp1_grid)
+            elif self.opp2_grid.label.cget('text') == player:
+                self.disable_grid(self.opp2_grid)
+            elif self.opp3_grid.label.cget('text') == player:
+                self.disable_grid(self.opp3_grid)
+
+            self.shooter = tk.Label(self, text="%s is dead!..LOL" % player, fg="firebrick",
+                                    font=("Helvetica", 14, "bold"), padx=10, pady=10)
+            self.shooter.grid(row=9, columnspan=4)
+            self.shooter.after(3500, self.shooter.destroy)
+
         if self.nickname in losers:
-            result = tkMessageBox.askyesno("Info", "Would you like to stay and spectate?")
-            if result == 'yes':
+            if tkMessageBox.askyesno("Info", "Would you like to stay and spectate?"):
                 self.state = "SPECTATE"
             else:
                 self.c.query_leave(self.game.game_id)
@@ -605,9 +611,8 @@ class MainApplication(tk.Tk):
                                     self.game.master = msg['data']['master']
                                     if self.nickname == self.game.master:
                                         self.start_button.grid(row=6, columnspan=2)
-                                if self.opponents != msg['data']['opponents']:
-                                    self.opponents = msg['data']['opponents']
-                                    self.change_names_before_start()
+                                self.opponents = msg['data']['opponents']
+                                self.change_names_before_start()
                             else:
                                 tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
                                 self.state = "SHOOT"
@@ -679,4 +684,4 @@ if __name__ == "__main__":
     app = MainApplication()
     app.mainloop()
 
-# TODO: spectator mode
+    # TODO: spectator mode
