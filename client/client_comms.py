@@ -4,6 +4,7 @@ import sys
 import threading
 import pika
 import time
+import uuid
 
 try:
     import common as cm
@@ -53,6 +54,7 @@ class Comm:
 
         self.to_server = connection.channel()
         self.to_server.queue_declare(queue='in')
+
         self.to_server_connection = connection.channel()
         self.to_server_connection.queue_declare(queue='alive_in')
 
@@ -67,7 +69,9 @@ class Comm:
         self.from_server_connection.queue_bind(exchange='alive_out', queue=self.queue_name_connection)
 
         query_conn = self.prepare_response(cm.QUERY_CONNECTION, self.queue_name, {})
-        self.to_server.basic_publish(exchange='', routing_key='in', body=query_conn)
+        self.corr_id = str(uuid.uuid4())
+        LOG.info("Queue name: %s, corr_id: %s" % (self.queue_name, str(self.corr_id)))
+        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(reply_to=self.queue_name, correlation_id=self.corr_id), body=query_conn)
 
         self.periodic_call()
         self.thread1.start()
@@ -75,7 +79,11 @@ class Comm:
         self.start_time = time.time()
         self.thread2.start()
 
+        self.thread3.start()
+
     def callback(self, ch, method, properties, body):
+        if properties.correlation_id == self.corr_id:
+            print "ID MATCHIVAD!!!"
         self.queue.put(body)
 
     def stop_the_thread_please(self):
@@ -107,7 +115,7 @@ class Comm:
             resp = self.prepare_response(cm.KEEP_ALIVE, self.queue_name_connection, [])
             self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
             LOG.info("Sent keep-alive to server: %s" % resp)
-            time.sleep(3.0 - ((time.time() - self.start_time) % 3.0))
+            time.sleep(25.0 - ((time.time() - self.start_time) % 25.0))
 
     def connection_thread(self):
         self.from_server_connection.basic_consume(self.connection_callback, queue=self.queue_name_connection,
@@ -115,7 +123,7 @@ class Comm:
         self.from_server_connection.start_consuming()
 
     def connection_callback(self, ch, method, properties, body):
-        print body
+        print "Keep-alive from server: %s" % body
 
     @staticmethod
     def prepare_response(request_type, client, data):
@@ -126,8 +134,10 @@ class Comm:
         return json.dumps(msg)
 
     def query_nick(self, nick):
+        self.corr_id = str(uuid.uuid4())
         msg = self.prepare_response(cm.QUERY_NICK, self.queue_name, {'nick': nick})
-        self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(
+            reply_to=self.queue_name, correlation_id=self.corr_id), body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_NICK])
 
     def query_place_ships(self, game_id, ships):
@@ -142,13 +152,18 @@ class Comm:
         """
         # ship_dump = json.dumps(ships, encoding='utf-8')
         msg = self.prepare_response(cm.QUERY_PLACE_SHIPS, self.queue_name, {'game_id': game_id, 'ships': ships})
-        # msg = cm.MSG_FIELD_SEP.join([cm.QUERY_PLACE_SHIPS, nick, game_id, ship_dump])
-        self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+        self.corr_id = str(uuid.uuid4())
+        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(
+            reply_to=self.queue_name, correlation_id=self.corr_id,
+        ), body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_PLACE_SHIPS])
 
     def create_game(self, game_size):
         msg = self.prepare_response(cm.QUERY_NEW_GAME, self.queue_name, {'size': game_size})
-        self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+        self.corr_id = str(uuid.uuid4())
+        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(
+            reply_to=self.queue_name, correlation_id=self.corr_id,
+        ), body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_NEW_GAME])
 
     def join_game(self, chosen_game_id):
@@ -158,7 +173,9 @@ class Comm:
 
     def query_games(self):
         msg = self.prepare_response(cm.QUERY_GAMES, self.queue_name, {})
-        self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+        self.corr_id = str(uuid.uuid4())
+        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(
+            reply_to=self.queue_name, correlation_id=self.corr_id), body=msg)
         LOG.info(cm.CTR_MSGS[cm.QUERY_GAMES])
 
     def query_start_game(self, game_id):

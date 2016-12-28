@@ -139,6 +139,8 @@ class GameProtocol:
                         #    self.lost_list.append(nick)
                         if len(self.alive_ships[nick]) == 0:
                             self.lost_list.append(nick)
+                    elif self.table[nick][t_x][t_y] == self.im_hit_im_hit:
+                        shooting_gallery[nick] = (t_x, t_y, True)
                     else:
                         shooting_gallery[nick] = (t_x, t_y, False)
                         self.table[nick][t_x][t_y] = self.i_missed
