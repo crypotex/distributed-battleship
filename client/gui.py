@@ -693,7 +693,8 @@ class MainApplication(tk.Tk):
                 pass
 
     def on_exit(self, server_shutdown=False):
-        if self.state == "NO_START_GAME" or self.state == "START_GAME" or self.state == "SHOOT":
+        if self.state == "NO_START_GAME" or self.state == "START_GAME" or self.state == "SHOOT" or \
+                        self.state == "NO_SHIPS" or self.state == "NO_YOUR_GAME":
             self.c.query_leave(self.game.game_id)
         self.c.stop_the_thread_please(server_shutdown)
         if server_shutdown:
