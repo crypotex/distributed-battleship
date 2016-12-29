@@ -244,18 +244,33 @@ class MainApplication(tk.Tk):
             if not val:
                 tkMessageBox.showwarning("Warning", "You have to fill all the fields.")
                 return
-
-        for key, val in coords.items():
-            parts = val.split(",")
-            process_x = self.game.process_coords(parts[0].upper())
-            if process_x[0]:
-                coords[key] = (int(process_x[1]), int(parts[1]))
-            else:
-                tkMessageBox.showwarning("Warning", "No such coordinate exists.")
+            if "," not in val:
+                tkMessageBox.showwarning("Warning", "Please enter correct coordinates.")
                 return
 
-        self.c.query_shoot(self.nickname, coords, self.game.game_id)
-        self.state = "SHOOT"
+        msg = self.check_shoot(coords)
+        if not msg:
+            tkMessageBox.showwarning("Warning", "Please enter correct coordinates.")
+            return
+        else:
+            self.c.query_shoot(self.nickname, msg, self.game.game_id)
+            self.state = "SHOOT"
+
+    def check_shoot(self, data):
+        msg = {}
+        for opponent, value in data.items():
+            value = value.split(",")
+            if len(value) == 2 and len(value[1]) != 0:
+                process_x = self.game.process_coords(value[0].upper())
+                if process_x:
+                    try:
+                        msg[opponent] = (process_x[1], int(value[1]))
+                    except ValueError:
+                        return
+                else:
+                    tkMessageBox.showwarning("Warning", "Please enter correct coordinates.")
+                    return
+        return msg
 
     def show_hits(self, msg):
         shots = msg['shots_fired']
