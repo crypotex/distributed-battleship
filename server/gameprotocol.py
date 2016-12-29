@@ -89,7 +89,8 @@ class GameProtocol:
             else:
                 result = {'master': self.master,
                           'opponents': self.table.keys(),
-                          'next': self.current_turn}
+                          'next': self.current_turn,
+                          'winner': ""}
             return result
 
     def place_ships(self, client_nick, enc_ships):
@@ -170,6 +171,7 @@ class GameProtocol:
                         #    self.lost_list.append(nick)
                         if len(self.alive_ships[nick]) == 0:
                             self.lost_list.append(nick)
+                            self.turn_list[nick][0] = 1
                     elif self.table[nick][t_x][t_y] == self.im_hit_im_hit:
                         shooting_gallery[nick] = (t_x, t_y, True)
                     else:
@@ -185,6 +187,12 @@ class GameProtocol:
                   "ships_lost": she_dead,
                   "origin": origin,
                   "shots_fired": shooting_gallery}
+
+        remaining = Counter(n for n, s in self.turn_list.items() if s[0] == 0)
+        if len(remaining) == 1:
+            result['winner'] = remaining[0]
+        else:
+            result['winner'] = ""
         return result
 
     def validate_coord(self, x, y):

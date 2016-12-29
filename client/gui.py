@@ -668,26 +668,25 @@ class MainApplication(tk.Tk):
                             else:
                                 extra = msg['data']
                                 self.show_hits(extra)
-                                if self.nickname == extra["next"]:
-                                    self.shooting_frame(self.opponents)
-                                if self.nickname == extra["origin"]:
-                                    self.destroy_shoot()
-                                    self.update()
+                                if extra['winner'] != "":
+                                    if self.nickname == extra['origin']:
+                                        self.destroy_shoot()
+                                    tkMessageBox.showinfo("Info", str(extra['winner']) + " won the game!")
+                                else:
+                                    if self.nickname == extra["next"]:
+                                        self.shooting_frame(self.opponents)
+                                    if self.nickname == extra["origin"]:
+                                        self.destroy_shoot()
+                                        self.update()
                         else:
                             print("Something went wrong from getting shots fired.")
                     elif self.state == "SPECTATE":
                         print "got to spectate mode"
-                        result = tkMessageBox.askyesno("Info", "Would you like to stay and spectate?")
-                        if result == 'yes':
-                            self.state = "SPECTATE"
-                        else:
-                            self.leave_game()
 
                 elif msg['type'] == cm.SERVER_SHUTDOWN:
-                    print "Nyyd olen sii n"
                     self.on_exit(True)
                 else:
-                    print "process_incoming unimplemented action, message was %s" % msg
+                    print "process_incoming unimplemented action, message was %s." % msg
 
             except Queue.Empty:
                 pass
