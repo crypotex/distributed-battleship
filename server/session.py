@@ -44,7 +44,7 @@ class Session:
             return prepare_neg_response(cm.RSP_NO_SUCH_CLIENT, client_id)
 
     def query_games(self, client_id):
-        resp = [game_id for game_id in self.games]
+        resp = [game_id for game_id in self.games if not self.games[game_id].game_started]
         return prepare_response(client_id, resp)
 
     def new_game(self, client_id, size):
