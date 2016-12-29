@@ -132,6 +132,7 @@ class GameProtocol:
         if all([len(self.alive_ships[e]) == 5 for e in self.alive_ships]) and len(self.alive_ships.keys()) == len(
                 nicks) and 1 < len(self.table) < 5:
             self.current_turn = self.master
+            self.game_started = True
             return nicks
         else:
             return False
