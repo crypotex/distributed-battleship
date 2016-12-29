@@ -59,18 +59,17 @@ class Comm:
         self.to_server_connection.queue_declare(queue='alive_in')
 
         self.from_server = connection.channel()
-        result = self.from_server.queue_declare()
+        result = self.from_server.queue_declare(exclusive=True)
         self.queue_name = result.method.queue
         self.from_server.queue_bind(exchange='out', queue=self.queue_name)
 
         self.from_server_connection = connection.channel()
-        result2 = self.from_server_connection.queue_declare()
+        result2 = self.from_server_connection.queue_declare(exclusive=True)
         self.queue_name_connection = result2.method.queue
         self.from_server_connection.queue_bind(exchange='alive_out', queue=self.queue_name_connection)
 
         query_conn = self.prepare_response(cm.QUERY_CONNECTION, self.queue_name, {})
         self.corr_id = str(uuid.uuid4())
-        LOG.info("Queue name: %s, corr_id: %s" % (self.queue_name, str(self.corr_id)))
         self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(reply_to=self.queue_name, correlation_id=self.corr_id), body=query_conn)
 
         self.periodic_call()
@@ -86,10 +85,13 @@ class Comm:
             print "ID MATCHIVAD!!!"
         self.queue.put(body)
 
-    def stop_the_thread_please(self):
+    def stop_the_thread_please(self, srvr_shutdown=False):
         self.running = False
-        resp = self.prepare_response(cm.DISCONNECT, self.queue_name_connection, [])
-        self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
+        if not srvr_shutdown:
+            resp = self.prepare_response(cm.DISCONNECT, self.queue_name_connection, [])
+            self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
+        #self.from_server.stop_consuming()
+        #self.from_server_connection.stop_consuming()
 
     def periodic_call(self):
         """
@@ -120,10 +122,16 @@ class Comm:
     def connection_thread(self):
         self.from_server_connection.basic_consume(self.connection_callback, queue=self.queue_name_connection,
                                                   no_ack=True)
+        print "Olen sii n"
         self.from_server_connection.start_consuming()
 
     def connection_callback(self, ch, method, properties, body):
-        print "Keep-alive from server: %s" % body
+        self.queue.put(body)
+        # enc_data = json.loads(body, encoding='utf-8')
+        # if enc_data['type'] == cm.SERVER_SHUTDOWN:
+        #     LOG.info("Server was shut down. The message was %s" % enc_data)
+        # else:
+        #     LOG.info("Something went wrong when server sent connection message.")
 
     @staticmethod
     def prepare_response(request_type, client, data):

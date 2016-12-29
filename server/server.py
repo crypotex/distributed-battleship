@@ -79,7 +79,6 @@ class Server:
                                                        correlation_id=properties.correlation_id,
                                                    ),
                                                    body=resp)
-
                     LOG.info("Sent RPC response to %s, msg was: %s." % (properties.reply_to, enc_resp))
                 else:
                     for client in enc_resp['clients']:
@@ -104,8 +103,18 @@ class Server:
             except KeyError:
                 LOG.error("Something went wrong, should investigate process_alive_queue_msg, msg was %s. " % body)
         elif enc_data['type'] == cm.DISCONNECT:
-            # Do whatever you do when disconnecting ... Not sure yet
-            LOG.info("Client %s disconnected. Implement the disconnecting thingy..." % str(cl_id))
+            LOG.info("Client %s disconnected." % str(cl_id))
+            try:
+                client = self.session.clients_alive[cl_id]['q']
+                if cl_id in self.session.clients_alive:
+                    del self.session.clients_alive[cl_id]
+                if client in self.session.clients:
+                    nickname = self.session.clients.pop(client)
+                    if nickname in self.session.reverse_clients:
+                        del self.session.reverse_clients[nickname]
+            except KeyError:
+                LOG.error("Something went wrong, should investigate process_alive_queue_msg, msg was %s." % body)
+                pass
         else:
             LOG.info("Unimplemented alive queue msg type: %s. " % enc_data['type'])
 
@@ -113,9 +122,7 @@ class Server:
         LOG.info("Shutting down server.")
         prep_msg = json.dumps({'type': cm.SERVER_SHUTDOWN}, encoding='utf-8')
         LOG.info("Sending shutdown seq to all clients.")
-        for aclient in self.session.clients_alive:
-            self.from_server_alive.basic_publish(exchange='', routing_key=aclient, body=prep_msg)
-            LOG.info("Send shutdown seq to client: %s." % aclient)
+        self.from_server_alive.basic_publish(exchange='alive_out', routing_key="", body=prep_msg)
 
 
 if __name__ == "__main__":

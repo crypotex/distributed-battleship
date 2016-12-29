@@ -548,7 +548,6 @@ class MainApplication(tk.Tk):
         while self.queue.qsize():
             try:
                 msg = json.loads(self.queue.get(0))
-                print self.state, msg
                 if len(msg) > 1 and self.c.queue_name in msg['clients']:
                     if self.state == "NO_CONN":
                         self.state = "NO_NICK"
@@ -607,7 +606,6 @@ class MainApplication(tk.Tk):
                             self.opponents = msg['data']['opponents']
                             if msg['data']['master'] == self.nickname:
                                 self.change_names(self.opponents)
-                                print "Olen siin"
                                 self.update()
                             else:
                                 self.game.master = msg['data']['master']
@@ -622,7 +620,6 @@ class MainApplication(tk.Tk):
                                 self.change_names(self.opponents)
                                 self.update_idletasks()
                             elif msg['data']['type'] == "leave":
-                                print "Somebody left before the start."
                                 if self.game.master != msg['data']['master']:
                                     self.game.master = msg['data']['master']
                                     if self.nickname == self.game.master:
@@ -641,7 +638,6 @@ class MainApplication(tk.Tk):
                     elif self.state == "START_GAME":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             if msg['data']['type'] == "leave":
-                                print "Somebody left right after start."
                                 if self.game.master != msg['data']['master']:
                                     self.game.master = msg['data']['master']
                                 self.opponents = msg['data']['opponents']
@@ -656,14 +652,12 @@ class MainApplication(tk.Tk):
                                     tkMessageBox.showinfo("Info", "Game started. Wait for your turn.")
                                     self.state = "SHOOT"
                         else:
-                            print("Something went wrong when starting the game.")
                             tkMessageBox.showwarning("Warning", "Please wait for other opponents.")
                             self.state = "NO_START_GAME"
                             self.show_grids()
                     elif self.state == "SHOOT":
                         if msg['type'] == cm.RSP_MULTI_OK:
                             if msg['data']['type'] == 'leave':
-                                print "Somebody left."
                                 self.game.master = msg['data']['master']
                                 self.destroy_shoot()
                                 if self.nickname == msg['data']['next']:
@@ -688,18 +682,24 @@ class MainApplication(tk.Tk):
                             self.state = "SPECTATE"
                         else:
                             self.leave_game()
+
+                elif msg['type'] == cm.SERVER_SHUTDOWN:
+                    print "Nyyd olen sii n"
+                    self.on_exit(True)
                 else:
-                    print msg
+                    print "process_incoming unimplemented action, message was %s" % msg
 
             except Queue.Empty:
                 pass
 
-    def on_exit(self):
+    def on_exit(self, server_shutdown=False):
         if self.state == "NO_START_GAME" or self.state == "START_GAME" or self.state == "SHOOT":
             self.c.query_leave(self.game.game_id)
+        self.c.stop_the_thread_please(server_shutdown)
+        if server_shutdown:
+            tkMessageBox.showinfo("Info", "Server was shutdown.")
         self.destroy()
-        self.c.stop_the_thread_please()
-        print("Beep Beep Beep Beep, Closing the shop!")
+        print "Beep Beep Beep Beep, Closing the shop!"
         sys.exit(0)
 
 
