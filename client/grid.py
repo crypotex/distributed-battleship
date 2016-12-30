@@ -76,5 +76,25 @@ class GridFrame(tk.Frame):
         self.label.grid(row=0, column=0)
         self.gridp.grid(row=1, column=0)
 
+        if not mine:
+            shoot_label = tk.Label(self, text="Coordinates (A,0)", font=("Helvetica", 11))
+            shoot_label.grid(row=2, column=0)
+
+            self.shoot = tk.Entry(self, width=17)
+        else:
+            nothing = tk.Label(self, text="")
+            nothing.grid(row=2, column=0)
+
     def color_ships(self, table):
         self.gridp.color_ships(table)
+
+    def show_shoot(self):
+        self.clear_entry()
+        self.shoot.grid(row=3, column=0)
+        if self.gridp.mine:
+            nothing = tk.Entry(self, width=17)
+            nothing.grid(row=3, column=0)
+            nothing.grid_forget()
+
+    def clear_entry(self):
+        self.shoot.delete(0, tk.END)

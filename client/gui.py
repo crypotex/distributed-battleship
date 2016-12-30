@@ -172,33 +172,16 @@ class MainApplication(tk.Tk):
         self.update_idletasks()
 
     def shooting_frame(self, opponents):
-        w1 = tk.Frame(self)
-        shoot_opp1_label = tk.Label(w1, text="Coordinates (A,0)", font=("Helvetica", 11), padx=10)
-        self.opp1_shoot = tk.Entry(w1, width=17)
-        shoot_opp1_label.grid(row=0, column=0)
-        self.opp1_shoot.grid(row=1, column=0)
-        w1.grid(row=2, column=1)
-
-        w2 = tk.Frame(self)
-        shoot_opp2_label = tk.Label(w2, text="Coordinates (A,0)", font=("Helvetica", 11), padx=10)
-        self.opp2_shoot = tk.Entry(w2, width=17)
-        shoot_opp2_label.grid(row=0, column=0)
-        self.opp2_shoot.grid(row=1, column=0)
-        w2.grid(row=4, column=0)
-
-        w3 = tk.Frame(self)
-        shoot_opp3_label = tk.Label(w3, text="Coordinates (A,0)", font=("Helvetica", 11), padx=10)
-        self.opp3_shoot = tk.Entry(w3, width=17)
-        shoot_opp3_label.grid(row=0, column=0)
-        self.opp3_shoot.grid(row=1, column=0)
-        w3.grid(row=4, column=1)
+        self.opp1_grid.show_shoot()
+        self.opp2_grid.show_shoot()
+        self.opp3_grid.show_shoot()
 
         if self.opp1_grid.label.cget("text") == "Opponent":
-            self.disable_grid(w1)
+            self.opp1_grid.shoot.configure(state='disable')
         if self.opp2_grid.label.cget("text") == "Opponent":
-            self.disable_grid(w2)
+            self.opp2_grid.shoot.configure(state='disable')
         if self.opp3_grid.label.cget("text") == "Opponent":
-            self.disable_grid(w3)
+            self.opp3_grid.shoot.configure(state='disable')
 
         self.shoot_button = tk.Button(self, text="Shoot", command=lambda: self.shoot(None), padx=30, pady=10)
         self.shoot_button.grid(row=7, columnspan=2, pady=(15, 0))
@@ -224,9 +207,9 @@ class MainApplication(tk.Tk):
 
     def destroy_shoot(self):
         try:
-            self.opp1_shoot.destroy()
-            self.opp2_shoot.destroy()
-            self.opp3_shoot.destroy()
+            self.opp1_grid.shoot.grid_forget()
+            self.opp2_grid.shoot.grid_forget()
+            self.opp3_grid.shoot.grid_forget()
             self.shoot_button.destroy()
         except:
             pass
@@ -234,12 +217,12 @@ class MainApplication(tk.Tk):
     def shoot(self, event):
         coords = {}
 
-        if self.opp1_shoot.cget('state') != 'disabled':
-            coords[self.opp1_grid.label.cget("text")] = self.opp1_shoot.get()
-        if self.opp2_shoot.cget('state') != 'disabled':
-            coords[self.opp2_grid.label.cget("text")] = self.opp2_shoot.get()
-        if self.opp3_shoot.cget('state') != 'disabled':
-            coords[self.opp3_grid.label.cget("text")] = self.opp3_shoot.get()
+        if self.opp1_grid.shoot.cget('state') != 'disabled':
+            coords[self.opp1_grid.label.cget("text")] = self.opp1_grid.shoot.get()
+        if self.opp2_grid.shoot.cget('state') != 'disabled':
+            coords[self.opp2_grid.label.cget("text")] = self.opp2_grid.shoot.get()
+        if self.opp3_grid.shoot.cget('state') != 'disabled':
+            coords[self.opp3_grid.label.cget("text")] = self.opp3_grid.shoot.get()
 
         if len(coords.keys()) == 0:
             self.shoot_button.destroy()
@@ -298,6 +281,13 @@ class MainApplication(tk.Tk):
                                         font=("Helvetica", 14, "bold"), padx=10, pady=10)
                 self.shooter.grid(row=9, columnspan=4)
                 self.shooter.after(3500, self.shooter.destroy)
+            elif self.nickname in self.game.spectators:
+                if self.opp1_grid.label.cget('text') == player:
+                    self.mark_hit_or_miss(v, self.opp1_grid)
+                if self.opp2_grid.label.cget('text') == player:
+                    self.mark_hit_or_miss(v, self.opp2_grid)
+                if self.opp3_grid.label.cget('text') == player:
+                    self.mark_hit_or_miss(v, self.opp3_grid)
 
             if lost_ships:
                 self.mark_lost_ships(lost_ships)
@@ -309,19 +299,19 @@ class MainApplication(tk.Tk):
             if self.opp1_grid.label.cget('text') == player:
                 self.disable_grid(self.opp1_grid)
                 try:
-                    self.opp1_shoot.configure(state='disabled')
+                    self.opp1_grid.shoot.configure(state='disable')
                 except:
                     pass
             elif self.opp2_grid.label.cget('text') == player:
                 self.disable_grid(self.opp2_grid)
                 try:
-                    self.opp2_shoot.configure(state='disable')
+                    self.opp2_grid.shoot.configure(state='disable')
                 except:
                     pass
             elif self.opp3_grid.label.cget('text') == player:
                 self.disable_grid(self.opp3_grid)
                 try:
-                    self.opp3_shoot.configure(state='disable')
+                    self.opp3_grid.shoot.configure(state='disable')
                 except:
                     pass
 
@@ -441,6 +431,7 @@ class MainApplication(tk.Tk):
             self.state = "NO_YOUR_GAME"
             self.c.create_game(self.size)
 
+            self.clear()
             self.create_grids()
         else:
             tkMessageBox.showwarning("Warning", "You should enter a valid grid size.")
@@ -547,19 +538,19 @@ class MainApplication(tk.Tk):
                 if self.opp1_grid.label.cget('text') == missing:
                     try:
                         self.opp1_grid.gridp.clear_grid()
-                        self.opp1_shoot.configure(state='disabled')
+                        self.opp1_grid.shoot.configure(state='disabled')
                     except:
                         pass
                 if self.opp2_grid.label.cget('text') == missing:
                     try:
                         self.opp2_grid.gridp.clear_grid()
-                        self.opp2_shoot.configure(state='disable')
+                        self.opp2_grid.shoot.configure(state='disable')
                     except:
                         pass
                 if self.opp3_grid.label.cget('text') == missing:
                     try:
                         self.opp3_grid.gridp.clear_grid()
-                        self.opp3_shoot.configure(state='disable')
+                        self.opp3_grid.shoot.configure(state='disable')
                     except:
                         pass
 
@@ -622,6 +613,7 @@ class MainApplication(tk.Tk):
                             self.size = msg['data']['size']
                             self.opponents = msg['data']['opponents']
                             self.init_board(self.games[self.joining_game_id], msg["data"]["master"])
+                            self.clear()
                             self.create_grids()
                             self.change_names(self.opponents)
                             self.update()
@@ -668,6 +660,7 @@ class MainApplication(tk.Tk):
                                 self.state = "SHOOT"
                         elif msg['type'] == cm.RSP_OK:
                             if self.nickname != self.game.master:
+                                self.clear()
                                 self.create_grids()
                         else:
                             tkMessageBox.showwarning("Warning", "Sorry, wait for opponents. ")
@@ -704,7 +697,6 @@ class MainApplication(tk.Tk):
                                     self.change_names_after_leaving()
                             else:
                                 extra = msg['data']
-                                self.show_hits(extra)
                                 if extra['winner'] != "":
                                     if self.nickname == extra['origin']:
                                         self.destroy_shoot()
@@ -718,11 +710,13 @@ class MainApplication(tk.Tk):
                                     if self.nickname == extra["origin"]:
                                         self.destroy_shoot()
                                         self.update()
+                                self.show_hits(extra)
                         else:
                             print("Something went wrong from getting shots fired.")
                     elif self.state == "SPECTATE":
                         self.show_ships(msg['data'])
                         self.state = "SHOOT"
+                        self.game.spectators.append(self.nickname)
 
                 elif msg['type'] == cm.SERVER_SHUTDOWN:
                     self.on_exit(True)
