@@ -308,11 +308,24 @@ class MainApplication(tk.Tk):
         for player in losers:
             if self.opp1_grid.label.cget('text') == player:
                 self.disable_grid(self.opp1_grid)
+                try:
+                    self.opp1_shoot.configure(state='disabled')
+                except:
+                    pass
             elif self.opp2_grid.label.cget('text') == player:
                 self.disable_grid(self.opp2_grid)
+                try:
+                    self.opp2_shoot.configure(state='disable')
+                except:
+                    pass
             elif self.opp3_grid.label.cget('text') == player:
                 self.disable_grid(self.opp3_grid)
+                try:
+                    self.opp3_shoot.configure(state='disable')
+                except:
+                    pass
 
+            self.update_idletasks()
             self.shooter = tk.Label(self, text="%s is dead!..LOL" % player, fg="firebrick",
                                     font=("Helvetica", 14, "bold"), padx=10, pady=10)
             self.shooter.grid(row=9, columnspan=4)
@@ -320,7 +333,7 @@ class MainApplication(tk.Tk):
             self.game.losers.append(player)
 
         if self.nickname in losers:
-            if tkMessageBox.askyesno("Info", "Would you like to stay and spectate?"):
+            if tkMessageBox.askyesno("Info", "You lost. \nWould you like to stay and spectate?"):
                 self.state = "SPECTATE"
                 self.c.query_spectate(self.game.game_id)
             else:

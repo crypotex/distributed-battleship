@@ -57,7 +57,7 @@ class Grid(tk.Canvas):
         for row in range(len(table)):
             for column in range(len(table[row])):
                 if 5 <= table[row][column] <= 9:
-                    self.itemconfig(self.rect[row, column], fill="forest green")
+                    self.itemconfig(self.rect[row, column], fill="sienna1")
                 elif table[row][column] == 1:
                     self.itemconfig(self.rect[row, column], fill="firebrick")
 
