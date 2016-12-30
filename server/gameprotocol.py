@@ -190,7 +190,7 @@ class GameProtocol:
 
         remaining = Counter(n for n, s in self.turn_list.items() if s[0] == 0)
         if len(remaining) == 1:
-            result['winner'] = remaining[0]
+            result['winner'] = remaining.keys()[0]
         else:
             result['winner'] = ""
         return result
