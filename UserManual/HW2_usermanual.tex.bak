@@ -120,15 +120,11 @@ The user interface is explained by the following screenshots and their descripti
 \begin{figure}[!hbt]
 	\centering
 	\includegraphics[width=0.8\textwidth]{SpectateInit.png}
-	\caption{If a player chooses to stay and spectate the game then they see other players' ships (pale orange squares) and where others have been hit (red squares) or missed (blue squares). They see informative messages as before.}
+	\caption{If a player chooses to stay and spectate the game then they see other players' ships (pale orange squares) and where others have been hit (red squares).}
 	\label{fig:SpectateInit}
 \end{figure}
 
-\begin{figure}[!hbt]
-	\centering
-	\includegraphics[width=0.8\textwidth]{Winner.png}
-	\caption{When there is only one player left with some alive ships then other players will get a notification about the winner.}
-	\label{fig:SpectateInit}
-\end{figure}
+
+
 
 \end{document}
