@@ -90,6 +90,11 @@ class MainApplication(tk.Tk):
 
         self.bind("<Return>", lambda e: self.callback_nickname(e, nickname.get()))
 
+    # TODO: kui nickname valimises ja cancel, siis saada serverisse, et lahkud. sama, kui m2ngu valid
+    def clear_server(self):
+        self.c.stop_the_thread_please()
+        self.choose_server()
+
     def choose_game(self):
         self.clear()
 
@@ -317,6 +322,7 @@ class MainApplication(tk.Tk):
         if self.nickname in losers:
             if tkMessageBox.askyesno("Info", "Would you like to stay and spectate?"):
                 self.state = "SPECTATE"
+                self.c.query_spectate(self.game.game_id)
             else:
                 self.c.query_leave(self.game.game_id)
                 self.state = "NO_GAMES"
@@ -377,7 +383,6 @@ class MainApplication(tk.Tk):
         host = self.servers[self.v.get()]
         self.c.connect_to_server(host)
         self.state = "NO_CONN"
-        # TODO: siia if-else'id, kui serveriga ei saa yhendust
         self.choose_nickname()
 
     def callback_nickname(self, event, nickname):
@@ -465,11 +470,17 @@ class MainApplication(tk.Tk):
         okay = tk.Button(self, text="OK", command=lambda: self.send_ships(None), font=("Helvetica", 12), padx=15,
                          pady=10)
         okay.grid(row=3, column=2, sticky="SE", padx=5, pady=15)
-        cancel = tk.Button(self, text="Cancel", command=self.choose_game, font=("Helvetica", 12),
+        cancel = tk.Button(self, text="Cancel", command=self.clear_ships, font=("Helvetica", 12),
                            padx=15, pady=10)
         cancel.grid(row=3, column=1, sticky="SE", padx=5, pady=15)
 
         self.bind("<Return>", self.send_ships)
+
+    def clear_ships(self):
+        self.c.query_leave(self.game.game_id)
+        self.game = None
+        self.state = "NO_GAMES"
+        self.c.query_games()
 
     def send_ships(self, event):
         msg = self.check_ships()
@@ -544,10 +555,23 @@ class MainApplication(tk.Tk):
                     if self.labels[j].cget('text') == missing:
                         self.labels[j].configure(text="Opponent")
 
+    def show_ships(self, data):
+        table = data['table']
+        alive_ships = data['alive_ships']
+
+        for opponent, ships in table.items():
+            if opponent == self.opp1_grid.label.cget('text'):
+                self.opp1_grid.color_ships(ships)
+            elif opponent == self.opp2_grid.label.cget('text'):
+                self.opp2_grid.color_ships(ships)
+            elif opponent == self.opp3_grid.label.cget('text'):
+                self.opp3_grid.color_ships(ships)
+
     def process_incoming(self):
         while self.queue.qsize():
             try:
                 msg = json.loads(self.queue.get(0))
+                print self.state, msg
                 if len(msg) > 1 and self.c.queue_name in msg['clients']:
                     if self.state == "NO_CONN":
                         self.state = "NO_NICK"
@@ -682,6 +706,8 @@ class MainApplication(tk.Tk):
                             print("Something went wrong from getting shots fired.")
                     elif self.state == "SPECTATE":
                         print "got to spectate mode"
+                        print "Data is: ", msg['data']
+                        self.show_ships(msg['data'])
 
                 elif msg['type'] == cm.SERVER_SHUTDOWN:
                     self.on_exit(True)

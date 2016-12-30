@@ -52,6 +52,11 @@ class Grid(tk.Canvas):
             for row in range(self.rows):
                 self.itemconfig(self.rect[row, column], fill="")
 
+    def color_ships(self, table):
+        for row in range(table):
+            for column in range(table[row]):
+                if table[row][column] != 0:
+                    self.itemconfig(self.rect[row, column], fill="green")
 
 class GridFrame(tk.Frame):
     def __init__(self, master, size, mine):
@@ -67,3 +72,6 @@ class GridFrame(tk.Frame):
 
         self.label.grid(row=0, column=0)
         self.gridp.grid(row=1, column=0)
+
+    def color_ships(self, table):
+        self.gridp.color_ships(table)

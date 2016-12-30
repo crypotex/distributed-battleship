@@ -195,6 +195,14 @@ class GameProtocol:
             result['winner'] = ""
         return result
 
+    def spectate(self, client):
+        if client in self.lost_list:
+            result = {'table': self.table,
+                      'alive_ships': self.alive_ships}
+        else:
+            result = None
+        return result
+
     def validate_coord(self, x, y):
         if 0 <= x < self.size and 0 <= y < self.size:
             return True

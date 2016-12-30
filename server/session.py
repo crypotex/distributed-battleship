@@ -136,6 +136,18 @@ class Session:
         else:
             prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
 
+    def spectate(self, client_id, data):
+        if data['game_id'] in self.games:
+            nick = self.clients[client_id]
+            resp = self.games[data['game_id']].spectate(nick)
+            if resp:
+                return prepare_response(client_id, resp)
+            else:
+                prepare_neg_response(cm.RSP_BAD_REQUEST, client_id)
+        else:
+            prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
+
+
     def handle_request(self, msg_json):
         enc_json = json.loads(msg_json, encoding='utf-8')
         try:
@@ -178,6 +190,10 @@ class Session:
                 return resp
             elif req == cm.QUERY_LEAVE:
                 resp = self.leave_game(client_id, enc_json['data'])
+                return resp
+            elif req == cm.QUERY_SPECTATE:
+                resp = self.spectate(client_id, enc_json['data'])
+                print "Resp is: ", str(resp)
                 return resp
 
             else:

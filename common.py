@@ -10,6 +10,7 @@ START_GAME = '7'
 QUERY_SHOOT = '8'
 QUERY_CONNECTION = '9'
 QUERY_LEAVE = '10'
+QUERY_SPECTATE = '11'
 
 CTR_MSGS = {QUERY_NICK: "Get nick available",
             QUERY_SERVERS: "Get available servers",
@@ -19,7 +20,9 @@ CTR_MSGS = {QUERY_NICK: "Get nick available",
             QUERY_JOIN_GAME: "Join an existing game",
             START_GAME: "Starts the current game and additionally sends all ships",
             QUERY_SHOOT: "Sends shots made to all other players",
-            QUERY_CONNECTION: "Get connection to server."}
+            QUERY_CONNECTION: "Get connection to server.",
+            QUERY_LEAVE: "Send leaving request to server.",
+            QUERY_SPECTATE: "Get spectator data from server."}
 # Responses--------------------------------------------------------------------
 ERR_MSGS = {}
 

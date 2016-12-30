@@ -90,8 +90,6 @@ class Comm:
         if not srvr_shutdown:
             resp = self.prepare_response(cm.DISCONNECT, self.queue_name_connection, [])
             self.to_server_connection.basic_publish(exchange='', routing_key='alive_in', body=resp)
-        #self.from_server.stop_consuming()
-        #self.from_server_connection.stop_consuming()
 
     def periodic_call(self):
         """
@@ -122,16 +120,10 @@ class Comm:
     def connection_thread(self):
         self.from_server_connection.basic_consume(self.connection_callback, queue=self.queue_name_connection,
                                                   no_ack=True)
-        print "Olen sii n"
         self.from_server_connection.start_consuming()
 
     def connection_callback(self, ch, method, properties, body):
         self.queue.put(body)
-        # enc_data = json.loads(body, encoding='utf-8')
-        # if enc_data['type'] == cm.SERVER_SHUTDOWN:
-        #     LOG.info("Server was shut down. The message was %s" % enc_data)
-        # else:
-        #     LOG.info("Something went wrong when server sent connection message.")
 
     @staticmethod
     def prepare_response(request_type, client, data):
@@ -203,6 +195,15 @@ class Comm:
     def query_leave(self, game_id):
         msg = self.prepare_response(cm.QUERY_LEAVE, self.queue_name, {'game_id': game_id})
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+
+    def query_spectate(self, game_id):
+        msg = self.prepare_response(cm.QUERY_SPECTATE, self.queue_name, {'game_id': game_id})
+        LOG.debug("Spectate data: %s" % msg)
+        self.corr_id = str(uuid.uuid4())
+        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(
+            reply_to=self.queue_name, correlation_id=self.corr_id,
+        ),
+                                     body=msg)
 
 
 def query_servers():
