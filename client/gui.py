@@ -696,6 +696,9 @@ class MainApplication(tk.Tk):
                                     if self.nickname == extra['origin']:
                                         self.destroy_shoot()
                                     tkMessageBox.showinfo("Info", str(extra['winner']) + " won the game!")
+                                    self.state = "NO_GAMES"
+                                    self.game = None
+                                    self.c.query_games()
                                 else:
                                     if self.nickname == extra["next"]:
                                         self.shooting_frame(self.opponents)
@@ -705,9 +708,8 @@ class MainApplication(tk.Tk):
                         else:
                             print("Something went wrong from getting shots fired.")
                     elif self.state == "SPECTATE":
-                        print "got to spectate mode"
-                        print "Data is: ", msg['data']
                         self.show_ships(msg['data'])
+                        self.state = "SHOOT"
 
                 elif msg['type'] == cm.SERVER_SHUTDOWN:
                     self.on_exit(True)
