@@ -319,7 +319,7 @@ class MainApplication(tk.Tk):
             self.shooter.after(3500, self.shooter.destroy)
             self.game.losers.append(player)
 
-        if self.nickname in losers and len(self.opponents) > 2:
+        if self.nickname in losers:
             if tkMessageBox.askyesno("Info", "You lost. \nWould you like to stay and spectate?"):
                 self.state = "SPECTATE"
                 self.c.query_spectate(self.game.game_id)

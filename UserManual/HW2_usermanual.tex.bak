@@ -27,7 +27,7 @@ Firstly, the (middleware) dependencies are pika python library and RabbitMQ. The
 \newpage
 
 \section*{User interface manual}
-The user interface is explained by the following screenshots and their descriptions.
+The user interface is explained by the following screenshots and their descriptions. Maximally there can be 4 players playing in the same game.
 
 
 \begin{figure}[!hbt]
@@ -109,14 +109,14 @@ The user interface is explained by the following screenshots and their descripti
 
 \begin{figure}[!hbt]
 	\centering
-	\includegraphics[width=0.8\textwidth]{PlayLost.png}
+	\includegraphics[width=0.9\textwidth]{PlayLost.png}
 	\caption{If a player loses, it is broadcast to everyone in a polite manner, and their grid is made disabled to avoid confusion. If no more players remain, only Leave game is an option.}
 	\label{fig:Playlost}
 \end{figure}
 
 \begin{figure}[!hbt]
 	\centering
-	\includegraphics[width=0.8\textwidth]{LoserChoose.png}
+	\includegraphics[width=0.9\textwidth]{LoserChoose.png}
 	\caption{If a player loses, they are presented with a pop-up where they can either choose to remain spectating or leave the game to be directed to game choosing view.}
 	\label{fig:LoserChoose}
 \end{figure}
