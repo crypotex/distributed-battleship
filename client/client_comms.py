@@ -70,7 +70,9 @@ class Comm:
 
         query_conn = self.prepare_response(cm.QUERY_CONNECTION, self.queue_name, {})
         self.corr_id = str(uuid.uuid4())
-        self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(reply_to=self.queue_name, correlation_id=self.corr_id), body=query_conn)
+        self.to_server.basic_publish(exchange='', routing_key='in',
+                                     properties=pika.BasicProperties(reply_to=self.queue_name,
+                                                                     correlation_id=self.corr_id), body=query_conn)
 
         self.periodic_call()
         self.thread1.start()
@@ -195,15 +197,15 @@ class Comm:
     def query_leave(self, game_id):
         msg = self.prepare_response(cm.QUERY_LEAVE, self.queue_name, {'game_id': game_id})
         self.to_server.basic_publish(exchange='', routing_key='in', body=msg)
+        LOG.info(cm.CTR_MSGS[cm.QUERY_LEAVE])
 
     def query_spectate(self, game_id):
         msg = self.prepare_response(cm.QUERY_SPECTATE, self.queue_name, {'game_id': game_id})
         LOG.debug("Spectate data: %s" % msg)
         self.corr_id = str(uuid.uuid4())
         self.to_server.basic_publish(exchange='', routing_key='in', properties=pika.BasicProperties(
-            reply_to=self.queue_name, correlation_id=self.corr_id,
-        ),
-                                     body=msg)
+            reply_to=self.queue_name, correlation_id=self.corr_id, ), body=msg)
+        LOG.info(cm.CTR_MSGS[cm.QUERY_SPECTATE])
 
 
 def query_servers():

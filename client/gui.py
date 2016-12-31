@@ -697,20 +697,24 @@ class MainApplication(tk.Tk):
                                     self.change_names_after_leaving()
                             else:
                                 extra = msg['data']
-                                if extra['winner'] != "":
+                                self.show_hits(extra)
+                                if extra['winner']:
                                     if self.nickname == extra['origin']:
                                         self.destroy_shoot()
-                                    tkMessageBox.showinfo("Info", str(extra['winner']) + " won the game!")
-                                    self.state = "NO_GAMES"
-                                    self.game = None
-                                    self.c.query_games()
+                                    if tkMessageBox.askokcancel(
+                                            "Info", str(extra['winner']) + " won the game!\n "
+                                                                           "Press OK to leave this game "
+                                                                           "and go to the list of available games."):
+                                        self.c.query_leave(self.game.game_id)
+                                        self.state = "NO_GAMES"
+                                        self.game = None
+                                        self.c.query_games()
                                 else:
                                     if self.nickname == extra["next"]:
                                         self.shooting_frame(self.opponents)
                                     if self.nickname == extra["origin"]:
                                         self.destroy_shoot()
                                         self.update()
-                                self.show_hits(extra)
                         else:
                             print("Something went wrong from getting shots fired.")
                     elif self.state == "SPECTATE":
