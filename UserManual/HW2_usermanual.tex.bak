@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{listings}
 \usepackage{graphicx} 
+\usepackage{hyperref}
 
 %opening
 \title{Distributed Battleships - Manual}
@@ -15,6 +16,9 @@
 \maketitle
 
 \section*{Setup process and dependencies}
+
+Repository: \url{https://github.com/crypotex/distributed-battleship}\\
+
 Firstly, the (middleware) dependencies are pika python library and RabbitMQ. They have to be installed. Pika can be installed using \textit{pip}. If using Linux, RabbitMQ can be installed using \textit{apt-get}.
 
 \noindent To run the application, first server needs to be run. To do this, from the command line run the file "server.py" from the \textit{server} directory. That should set up the server.
@@ -106,7 +110,7 @@ The user interface is explained by the following screenshots and their descripti
 \begin{figure}[!hbt]
 	\centering
 	\includegraphics[width=0.8\textwidth]{PlayLost.png}
-	\caption{If a player loses, it is broadcast to everyone in a polite manner, and their grid is deleted to avoid confusion. If no more players remain, only Leave game is an option.}
+	\caption{If a player loses, it is broadcast to everyone in a polite manner, and their grid is made disabled to avoid confusion. If no more players remain, only Leave game is an option.}
 	\label{fig:Playlost}
 \end{figure}
 
@@ -120,11 +124,15 @@ The user interface is explained by the following screenshots and their descripti
 \begin{figure}[!hbt]
 	\centering
 	\includegraphics[width=0.8\textwidth]{SpectateInit.png}
-	\caption{If a player chooses to stay and spectate the game then they see other players' ships (pale orange squares) and where others have been hit (red squares).}
+	\caption{If a player chooses to stay and spectate the game then they see other players' ships (pale orange squares) and where others have been hit (red squares) or missed (blue squares). They see informative messages as before.}
 	\label{fig:SpectateInit}
 \end{figure}
 
-
-
+\begin{figure}[!hbt]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Winner.png}
+	\caption{When there is only one player left with some alive ships then everybody will get a notification about the winner.}
+	\label{fig:Winner}
+\end{figure}
 
 \end{document}
