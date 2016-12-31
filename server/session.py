@@ -147,7 +147,6 @@ class Session:
         else:
             prepare_neg_response(cm.RSP_NO_SUCH_GAME, client_id)
 
-
     def handle_request(self, msg_json):
         enc_json = json.loads(msg_json, encoding='utf-8')
         try:
@@ -193,7 +192,6 @@ class Session:
                 return resp
             elif req == cm.QUERY_SPECTATE:
                 resp = self.spectate(client_id, enc_json['data'])
-                print "Resp is: ", str(resp)
                 return resp
 
             else:

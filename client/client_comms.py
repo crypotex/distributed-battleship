@@ -84,7 +84,7 @@ class Comm:
 
     def callback(self, ch, method, properties, body):
         if properties.correlation_id == self.corr_id:
-            print "ID MATCHIVAD!!!"
+            LOG.info("RPC correlation IDs match.")
         self.queue.put(body)
 
     def stop_the_thread_please(self, srvr_shutdown=False):

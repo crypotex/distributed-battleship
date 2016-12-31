@@ -68,7 +68,9 @@ class GameProtocol:
                             return result
 
                 elif leaver[0] == 1:
-                    pass
+                    self.turn_list[client][0] = 2
+                    self.table.pop(client)
+
                 else:
                     print("User already dc-d or left or lost")
                     return False

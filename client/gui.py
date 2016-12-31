@@ -193,10 +193,7 @@ class MainApplication(tk.Tk):
 
     def leave_game(self):
         if tkMessageBox.askquestion("Warning", "Are you sure you want to leave? Your ships will be removed."):
-            self.c.query_leave(self.game.game_id)
-            self.state = "NO_GAMES"
-            self.game = None
-            self.c.query_games()
+            self.clear_ships()
         else:
             return
 
@@ -705,10 +702,7 @@ class MainApplication(tk.Tk):
                                             "Info", str(extra['winner']) + " won the game!\n "
                                                                            "Press OK to leave this game "
                                                                            "and go to the list of available games."):
-                                        self.c.query_leave(self.game.game_id)
-                                        self.state = "NO_GAMES"
-                                        self.game = None
-                                        self.c.query_games()
+                                        self.clear_ships()
                                 else:
                                     if self.nickname == extra["next"]:
                                         self.shooting_frame(self.opponents)
